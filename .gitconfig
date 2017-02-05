@@ -1,0 +1,16 @@
+[user]
+    name = Ignacio Velazquez
+    email = ivelazquez85@gmail.com
+[github]
+    user = nass600
+[color]
+    ui = auto
+[core]
+    editor = vim
+    excludesfile = ~/.gitignore
+[web]
+    browser = google-chrome
+[push]
+    default = simple
+[alias]
+    kill = "!f(){ git branch -D \"$1\";  git push origin --delete \"$1\"; };f"
