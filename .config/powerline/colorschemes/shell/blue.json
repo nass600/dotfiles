@@ -1,5 +1,5 @@
 {
-	"name": "Default",
+	"name": "blue",
 	"groups": {
 	    "hostname":                  { "fg": "darkblue", "bg": "gray2", "attrs": ["bold"] },
 		"user":                      { "fg": "white", "bg": "darkblue", "attrs": ["bold"] },
