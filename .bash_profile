@@ -22,16 +22,3 @@ if which brew > /dev/null && [ -f "$(brew --prefix)/etc/bash_completion" ]; then
 elif [ -f /etc/bash_completion ]; then
 	source /etc/bash_completion;
 fi;
-
-############################################################
-# Powerline configuration
-############################################################
-
-powerline_info=$(pip show powerline-status | grep Location)
-if [ -n "$powerline_info" ]; then
-    powerline_repo=${powerline_info#Location: }
-    powerline-daemon -q
-    POWERLINE_BASH_CONTINUATION=1
-    POWERLINE_BASH_SELECT=1
-    . ${powerline_repo}/powerline/bindings/bash/powerline.sh
-fi
