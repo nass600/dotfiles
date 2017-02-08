@@ -2,14 +2,13 @@ set nocompatible
 filetype off
 
 "vundle
-set rtp+=/Users/nass600/.vim/bundle/Vundle.vim
+set rtp+={{ home }}/.vim/bundle/Vundle.vim
 call vundle#begin()
 Plugin 'git@github.com:gmarik/vundle'
 Plugin 'git@github.com:blueshirts/darcula'
 call vundle#end()
 
 syntax enable
-colorscheme darcula
 set nu
 syntax on
 filetype on
@@ -17,6 +16,12 @@ filetype plugin indent on
 set tabstop=4
 set shiftwidth=4
 set expandtab
+
+try
+  colorscheme darcula
+catch /^Vim\%((\a\+)\)\=:E185/
+  " deal with it
+endtry
 
 " powerline
 set rtp+=/usr/local/lib/python2.7/site-packages/powerline/bindings/vim
