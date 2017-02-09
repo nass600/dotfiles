@@ -2,7 +2,7 @@ set nocompatible
 filetype off
 
 "vundle
-set rtp+=~/.vim/bundle/Vundle.vim
+set rtp+=/home/vagrant/.vim/bundle/Vundle.vim
 call vundle#begin()
 Plugin 'git@github.com:gmarik/vundle'
 Plugin 'git@github.com:blueshirts/darcula'
