@@ -24,8 +24,15 @@ catch /^Vim\%((\a\+)\)\=:E185/
 endtry
 
 " powerline
-if filereadable( expand("/usr/local/lib/python2.7/site-packages/powerline/bindings/vim") )
-    set rtp+=/usr/local/lib/python2.7/site-packages/powerline/bindings/vim
+let powerline_dir = "0"
+if isdirectory("/usr/local/lib/python2.7/site-packages/powerline/bindings/vim")
+    let powerline_dir = "/usr/local/lib/python2.7/site-packages/powerline/bindings/vim"
+elseif isdirectory("/usr/local/lib/python2.7/dist-packages/powerline/bindings/vim")
+    let powerline_dir = "/usr/local/lib/python2.7/dist-packages/powerline/bindings/vim"
+endif
+ 
+if powerline_dir != "0"
+    set rtp+=powerline_dir
     python from powerline.vim import setup as powerline_setup
     python powerline_setup()
     python del powerline_setup
