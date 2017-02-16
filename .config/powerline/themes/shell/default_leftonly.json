@@ -1,5 +1,5 @@
 {
-	"segments": {
+    "segments": {
 		"left": [
 			{
 				"function": "powerline.segments.common.env.user",
@@ -14,13 +14,20 @@
                     "exclude_domain": true
                 }
 			},
-			{
-				"function": "powerline.segments.common.env.virtualenv",
-				"priority": 50
-			},
+            {
+                "function": "powerline.segments.common.time.date",
+                "priority": 10,
+                "args": {
+                    "format": "%H:%M:%S"
+                }
+            },
 			{
 				"function": "powerline.segments.shell.cwd",
 				"priority": 10
+			},
+			{
+				"function": "powerline.segments.common.env.virtualenv",
+				"priority": 50
 			},
             {
                 "function": "powerline_gitstatus.gitstatus",
