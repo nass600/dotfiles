@@ -4,7 +4,7 @@ filetype off
 "vundle
 set rtp+=~/.vim/bundle/Vundle.vim
 call vundle#begin()
-Plugin 'git@github.com:gmarik/vundle'
+Plugin 'git@github.com:VundleVim/Vundle.vim'
 Plugin 'git@github.com:blueshirts/darcula'
 call vundle#end()
 
