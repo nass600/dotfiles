@@ -4,8 +4,8 @@ filetype off
 "vundle
 set rtp+=~/.vim/bundle/Vundle.vim
 call vundle#begin()
-Plugin 'git@github.com:VundleVim/Vundle.vim'
-Plugin 'git@github.com:blueshirts/darcula'
+Plugin 'VundleVim/Vundle.vim'
+Plugin 'blueshirts/darcula'
 call vundle#end()
 
 syntax enable
