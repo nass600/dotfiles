@@ -1,9 +1,5 @@
 #! /bin/bash
 
-# Colors for dark terminals
-export CLICOLOR=1
-export LSCOLORS=GxFxCxDxBxegedabagaced
-
 # Include alias file (if present) containing aliases for ssh, etc.
 if [ -f ~/.bash_aliases ]
 then
