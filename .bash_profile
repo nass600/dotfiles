@@ -21,5 +21,6 @@ fi;
 
 # Add homebrew python version to path (only macOS)
 if [ -d "/usr/local/opt/python/libexec/bin" ]
-    export PATH="/usr/local/opt/python/libexec/bin:$PATH"
+then
+    export PATH="/usr/local/opt/python/libexec/bin:$PATH";
 fi;
