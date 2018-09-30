@@ -1,5 +1,8 @@
 #! /bin/bash
 
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+
 # Include alias file (if present) containing aliases for ssh, etc.
 if [ -f ~/.bash_aliases ]
 then
