@@ -27,3 +27,8 @@ if [ -d "/usr/local/opt/python/libexec/bin" ]
 then
     export PATH="/usr/local/opt/python/libexec/bin:$PATH";
 fi;
+
+# NVM
+export NVM_DIR="$HOME/.nvm"
+[ -s "/usr/local/opt/nvm/nvm.sh" ] && . "/usr/local/opt/nvm/nvm.sh"
+[ -s "/usr/local/opt/nvm/etc/bash_completion" ] && . "/usr/local/opt/nvm/etc/bash_completion"
