@@ -14,5 +14,7 @@
     default = simple
 [alias]
     kill = "!f(){ git branch -D \"$1\";  git push origin --delete \"$1\"; };f"
+[remote "origin"]
+    fetch = +refs/pull/*/head:refs/remotes/origin/pr/*
 [remote "upstream"]
     fetch = +refs/pull/*/head:refs/remotes/upstream/pr/*
