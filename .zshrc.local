@@ -41,10 +41,14 @@ export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 
 # NVM
-# export NVM_DIR="$HOME/.nvm"
-# [ -s "/usr/local/opt/nvm/nvm.sh" ] && . "/usr/local/opt/nvm/nvm.sh"
-# [ -s "/usr/local/opt/nvm/etc/bash_completion" ] && . "/usr/local/opt/nvm/etc/bash_completion"
+export NVM_DIR="$HOME/.nvm"
+[ -s "/usr/local/opt/nvm/nvm.sh" ] && . "/usr/local/opt/nvm/nvm.sh"
+[ -s "/usr/local/opt/nvm/etc/bash_completion" ] && . "/usr/local/opt/nvm/etc/bash_completion"
 
+# Fast theme zsh-syntax-highlighting
+if { fast-theme -l | grep -v -q 'clean'; }; then
+    fast-theme -q 'clean'
+fi
 
 # Aliases
 . $HOME/.dotfiles/zsh/aliases.zsh
