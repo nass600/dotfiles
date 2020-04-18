@@ -1,6 +1,7 @@
 
 # Segments
 POWERLEVEL9K_MODE='nerdfont-complete'
+POWERLEVEL9K_PROMPT_AND_NEWLINE=false
 POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(os_icon root_indicator dir)
 POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status vcs time)
 POWERLEVEL9K_DIR_PATH_SEPARATOR="%F{235} $(print $'\uE0B1') %F{white}"
