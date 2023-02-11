@@ -1,5 +1,3 @@
-# . $HOME/.dotfiles/zsh/powerlevel9k.zsh
-
 # Colors
 export CLICOLOR=1
 export LSCOLORS=GxFxCxDxBxegedabagaced
@@ -12,6 +10,3 @@ export LANG=en_US.UTF-8
 if { fast-theme -l | grep -v -q 'clean'; }; then
     fast-theme -q 'clean'
 fi
-
-# Aliases
-# . $HOME/.dotfiles/zsh/aliases.zsh
