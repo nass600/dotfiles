@@ -1,4 +1,4 @@
-. $HOME/.dotfiles/zsh/powerlevel9k.zsh
+# . $HOME/.dotfiles/zsh/powerlevel9k.zsh
 
 # Colors
 export CLICOLOR=1
@@ -24,4 +24,4 @@ if { fast-theme -l | grep -v -q 'clean'; }; then
 fi
 
 # Aliases
-. $HOME/.dotfiles/zsh/aliases.zsh
+# . $HOME/.dotfiles/zsh/aliases.zsh
