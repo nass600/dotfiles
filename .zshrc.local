@@ -21,4 +21,5 @@ PATH="$HOME/.local/bin:$PATH"
 # Fast theme zsh-syntax-highlighting
 if { fast-theme -l | grep -v -q 'clean'; }; then
     fast-theme -q 'clean'
+    fast-theme HOME:overlay
 fi
