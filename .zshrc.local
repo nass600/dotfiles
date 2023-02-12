@@ -1,6 +1,6 @@
-# Colors
-export CLICOLOR=1
-export LSCOLORS=GxFxCxDxBxegedabagaced
+# Dircolors
+eval `gdircolors $ANTIGEN_BUNDLES/joshjon/bliss-dircolors/bliss.dircolors`
+zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
 
 # Language
 export LC_ALL=en_US.UTF-8
