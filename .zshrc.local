@@ -18,6 +18,9 @@ eval "$(pyenv init -)"
 # Poetry
 PATH="$HOME/.local/bin:$PATH"
 
+# Doubtfire (Python script)
+TESSDATA_PREFIX="$HOME/Workspace/$USER/tessdata_best"
+
 # Fast theme zsh-syntax-highlighting
 if { fast-theme -l | grep -v -q 'clean'; }; then
     fast-theme -q 'clean'
