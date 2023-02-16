@@ -21,8 +21,20 @@ PATH="$HOME/.local/bin:$PATH"
 # Doubtfire (Python script)
 TESSDATA_PREFIX="$HOME/Workspace/$USER/tessdata_best"
 
-# Fast theme zsh-syntax-highlighting
-if { fast-theme -l | grep -v -q 'clean'; }; then
-    fast-theme -q 'clean'
-    fast-theme -q ~/.zsh-highlighting-overlay.ini
-fi
+# Zsh-syntax-highlighting theme
+typeset -A ZSH_HIGHLIGHT_STYLES
+ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=9,bold'
+ZSH_HIGHLIGHT_STYLES[correct-subtle]='fg=46'
+ZSH_HIGHLIGHT_STYLES[incorrect-subtle]='fg=9'
+ZSH_HIGHLIGHT_STYLES[subcommand]='fg=219,bold'
+ZSH_HIGHLIGHT_STYLES[alias]='fg=39,bold'
+ZSH_HIGHLIGHT_STYLES[suffix-alias]='fg=39,bold'
+ZSH_HIGHLIGHT_STYLES[builtin]='fg=39,bold'
+ZSH_HIGHLIGHT_STYLES[function]='fg=46,bold'
+ZSH_HIGHLIGHT_STYLES[command]='fg=39,bold'
+ZSH_HIGHLIGHT_STYLES[hashed-command]='fg=39,bold'
+ZSH_HIGHLIGHT_STYLES[path]='fg=214'
+ZSH_HIGHLIGHT_STYLES[single-hyphen-option]='fg=226'
+ZSH_HIGHLIGHT_STYLES[double-hyphen-option]='fg=226'
+ZSH_HIGHLIGHT_STYLES[single-quoted-argument]='fg=46'
+ZSH_HIGHLIGHT_STYLES[double-quoted-argument]='fg=46'
