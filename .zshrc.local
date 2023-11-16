@@ -19,7 +19,7 @@ eval "$(pyenv init -)"
 PATH="$HOME/.local/bin:$PATH"
 
 # Doubtfire (Python script)
-TESSDATA_PREFIX="$HOME/Workspace/$USER/tessdata_best"
+export TESSDATA_PREFIX="/opt/homebrew/share/tessdata"
 
 # Zsh-syntax-highlighting theme
 typeset -A ZSH_HIGHLIGHT_STYLES
