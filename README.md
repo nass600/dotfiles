@@ -1,11 +1,11 @@
 # dotfiles
 
-[![macos](https://img.shields.io/badge/macos_13_(ventura)-white?style=for-the-badge&logo=apple&logoColor=black)]()
+[![macos](<https://img.shields.io/badge/macos_15_(sequoia)-white?style=for-the-badge&logo=apple&logoColor=black>)]()
 [![GitHub tag](https://img.shields.io/github/tag/nass600/dotfiles.svg?style=for-the-badge&logo=github)]()
 
 My dotfiles configuration.
 
-> Working in macOS 13 Ventura
+> Working in macOS 15 Sequoia
 
 ## Installation
 
