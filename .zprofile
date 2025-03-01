@@ -1,6 +1,7 @@
 # Homebrew (Apple Silicon)
 if [ -d "/opt/homebrew/bin" ]; then
     export PATH="/opt/homebrew/bin:$PATH"
+    export PATH="/opt/homebrew/sbin:$PATH"
 fi
 
 # Pyenv
