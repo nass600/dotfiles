@@ -1,0 +1,24 @@
+#!/bin/sh
+# Runs brew bundle whenever the Brewfile changes.
+# {{ include "Brewfile" | sha256sum }}
+
+set -e
+
+BREWFILE="{{ .chezmoi.sourceDir }}/Brewfile"
+
+# Ensure mas is available so brew bundle can process App Store entries.
+if ! command -v mas >/dev/null 2>&1; then
+    brew install mas
+fi
+
+# Safety net: if not signed into the App Store, pause and open it.
+# `mas` cannot sign in programmatically (Apple removed the API).
+if ! mas account >/dev/null 2>&1; then
+    echo ""
+    echo "Not signed into the Mac App Store. Opening App Store..."
+    open -a "App Store"
+    printf "Press Enter once you're signed in to continue... "
+    read _ < /dev/tty
+fi
+
+brew bundle --no-lock --file="$BREWFILE"

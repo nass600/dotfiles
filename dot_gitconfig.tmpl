@@ -1,14 +1,14 @@
 [init]
     defaultBranch = main
 [user]
-    name = Ignacio Velazquez
-    email = ivelazquez85@gmail.com
+    name = {{ .name }}
+    email = {{ .email }}
 [github]
-    user = nass600
+    user = {{ .github_user }}
 [color]
     ui = auto
 [core]
-    editor = vim
+    editor = micro
     excludesfile = ~/.gitignore
 [web]
     browser = google-chrome
@@ -19,6 +19,7 @@
 [alias]
     kill = "!f(){ git branch -D \"$1\";  git push origin --delete \"$1\"; };f"
     co = checkout
+    sw = switch
     br = branch
     ci = commit
     st = status

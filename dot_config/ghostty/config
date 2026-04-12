@@ -1,0 +1,21 @@
+# Font
+font-family = MesloLGS Nerd Font Mono
+font-size = 14
+
+# Theme
+theme = dark:Catppuccin Mocha,light:Catppuccin Latte
+
+# Window
+window-padding-x = 8
+window-padding-y = 8
+window-decoration = false
+
+# Shell
+shell-integration = zsh
+
+# Cursor
+cursor-style = block
+cursor-style-blink = false
+
+# Scrollback
+scrollback-limit = 10000
