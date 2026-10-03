@@ -1,2 +1,5 @@
 .DS_Store
 .idea
+.superpowers
+docs/superpowers/
+**/.claude/settings.local.json

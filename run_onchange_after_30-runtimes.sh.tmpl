@@ -1,0 +1,79 @@
+#!/bin/bash
+# Installs language runtimes and global tools that Homebrew does not own.
+# Declared in .chezmoidata/runtimes.toml; chezmoi re-runs this whenever the rendered list changes.
+{{- $m := index .runtimes .machine }}
+{{- $npm := concat .runtimes.npm_globals $m.npm_globals }}
+{{- $uv := concat .runtimes.uv_tools $m.uv_tools }}
+{{- $uvGit := concat .runtimes.uv_tools_git $m.uv_tools_git }}
+
+failed=""
+fail() { failed="$failed\n  - $1"; echo "!! $1"; }
+
+if ! command -v brew >/dev/null 2>&1 && [ -x /opt/homebrew/bin/brew ]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+export PATH="$HOME/.local/bin:$PATH"
+
+# --- Node ({{ .runtimes.node }}) via nvm ---
+export NVM_DIR="$HOME/.nvm"
+mkdir -p "$NVM_DIR"
+if [ -s "$(brew --prefix nvm)/nvm.sh" ]; then
+    # shellcheck disable=SC1091
+    . "$(brew --prefix nvm)/nvm.sh"
+    nvm install '{{ .runtimes.node }}' && nvm alias default '{{ .runtimes.node }}' || fail "node {{ .runtimes.node }}"
+{{- range $npm }}
+    npm ls -g --depth=0 '{{ . }}' >/dev/null 2>&1 || npm install -g '{{ . }}' || fail "npm global {{ . }}"
+{{- end }}
+else
+    fail "nvm is not installed (expected from the Brewfile)"
+fi
+
+# --- Python ({{ .runtimes.python }}) via pyenv ---
+if command -v pyenv >/dev/null 2>&1; then
+    pyenv install --skip-existing '{{ .runtimes.python }}' \
+        && pyenv global "$(pyenv latest '{{ .runtimes.python }}')" \
+        || fail "python {{ .runtimes.python }}"
+else
+    fail "pyenv is not installed (expected from the Brewfile)"
+fi
+
+# --- pipx apps ---
+{{- range .runtimes.pipx }}
+pipx list --short 2>/dev/null | grep -q '^{{ . }} ' || pipx install '{{ . }}' || fail "pipx {{ . }}"
+{{- end }}
+
+# --- GitHub host key ---
+# Pinned from https://api.github.com/meta so the private-repo installs below never stop to ask
+# "are you sure you want to continue connecting".
+mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
+ssh-keygen -F github.com >/dev/null 2>&1 \
+    || echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" >> "$HOME/.ssh/known_hosts"
+
+# --- uv tools ---
+{{- range $uv }}
+uv tool install '{{ . }}' || fail "uv tool {{ . }}"
+{{- end }}
+{{- range $uvGit }}
+# Private repo: needs the 1Password ssh agent unlocked.
+uv tool install '{{ . }}' || fail "uv tool {{ . }} (is the 1Password ssh agent unlocked?)"
+{{- end }}
+
+# --- graphify skill for Claude Code ---
+if command -v graphify >/dev/null 2>&1; then
+    [ -f "$HOME/.claude/skills/graphify/SKILL.md" ] || graphify install --platform claude || fail "graphify skill"
+fi
+
+# --- Cursor extensions ---
+if command -v cursor >/dev/null 2>&1; then
+    have="$(cursor --list-extensions 2>/dev/null | tr '[:upper:]' '[:lower:]')"
+{{- range .editor.cursor_extensions }}
+    echo "$have" | grep -qx '{{ . }}' || cursor --install-extension '{{ . }}' >/dev/null 2>&1 || fail "cursor extension {{ . }}"
+{{- end }}
+fi
+
+if [ -n "$failed" ]; then
+    printf "\nSome runtimes or tools did not install:%b\n" "$failed"
+    echo "Fix the cause and run \`chezmoi apply\` again; this script retries until it passes."
+    exit 1
+fi
+echo "Runtimes and tools are up to date."

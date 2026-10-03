@@ -1,0 +1,12 @@
+# Repo files that are not dotfiles. Without this list chezmoi copies them into $HOME.
+README.md
+LICENSE
+install.sh
+Brewfile
+Brewfile.*
+docs
+
+# Secrets need 1Password, which CI does not have.
+{{ if not .secrets }}
+.npmrc
+{{ end }}

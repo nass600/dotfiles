@@ -1,0 +1,75 @@
+# Everything installed outside Homebrew. Edit this file and run `chezmoi apply`:
+# the runtimes script re-runs whenever its rendered content changes.
+
+[runtimes]
+    node = "lts/*"
+    python = "3.14"
+    npm_globals = ["vobsub-to-srt"]
+    pipx = ["poetry"]
+    uv_tools = ["graphifyy"]
+    # Private repos: need the 1Password ssh agent unlocked.
+    uv_tools_git = [
+        "git+ssh://git@github.com/nass600/doubtfire",
+        "git+ssh://git@github.com/nass600/parker-cli",
+    ]
+
+# Added on top of the shared lists on one machine only.
+[runtimes.personal]
+    npm_globals = []
+    uv_tools = []
+    uv_tools_git = []
+
+[runtimes.work]
+    npm_globals = []
+    uv_tools = []
+    uv_tools_git = []
+
+[editor]
+    cursor_extensions = [
+        "anthropic.claude-code",
+        "anysphere.cursorpyright",
+        "anysphere.pyright",
+        "anysphere.remote-containers",
+        "anysphere.remote-ssh",
+        "bierner.markdown-preview-github-styles",
+        "christian-kohler.npm-intellisense",
+        "dbaeumer.vscode-eslint",
+        "deinsoftware.vitest-snippets",
+        "donjayamanne.python-environment-manager",
+        "dsznajder.es7-react-js-snippets",
+        "eamodio.gitlens",
+        "esbenp.prettier-vscode",
+        "formulahendry.auto-rename-tag",
+        "github.vscode-github-actions",
+        "graphql.vscode-graphql",
+        "graphql.vscode-graphql-syntax",
+        "johnpapa.vscode-peacock",
+        "kamikillerto.vscode-colorize",
+        "ldez.ignore-files",
+        "maptz.camelcasenavigation",
+        "mhutchie.git-graph",
+        "michioxd.vscode-mui-material-icon-picker",
+        "mikestead.dotenv",
+        "ms-azuretools.vscode-docker",
+        "ms-python.debugpy",
+        "ms-python.isort",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-vscode-remote.remote-containers",
+        "pkief.material-icon-theme",
+        "prisma.prisma",
+        "redhat.vscode-yaml",
+        "richie5um2.vscode-sort-json",
+        "stylelint.vscode-stylelint",
+        "tamasfe.even-better-toml",
+        "vitest.explorer",
+        "vue.volar",
+        "vunguyentuan.vscode-css-variables",
+        "wholroyd.jinja",
+    ]
+
+# Prompt accent per machine (256-colour codes) so the two MacBooks are told apart at a glance.
+[prompt.personal]
+    primary = 34
+[prompt.work]
+    primary = 33

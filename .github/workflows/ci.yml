@@ -1,0 +1,68 @@
+name: CI
+
+# Smoke test: applies the repo into a scratch home for each machine type and checks that
+# templates render, scripts parse, Brewfiles load and no repo file leaks into $HOME.
+# It does not install packages or touch system settings.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify (${{ matrix.machine }})
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        machine: [personal, work]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install chezmoi and shellcheck
+        run: brew install chezmoi shellcheck
+
+      - name: Lint static scripts
+        run: |
+          sh -n install.sh
+          shellcheck -S warning install.sh run_once_after_10-macos-defaults.sh
+
+      - name: Brewfiles parse
+        run: |
+          for f in Brewfile Brewfile.personal Brewfile.work; do
+            brew bundle list --all --file="$f" > /dev/null
+          done
+
+      - name: Apply into a scratch home
+        run: |
+          home="$RUNNER_TEMP/home"; mkdir -p "$home"
+          args=(--source "$PWD" --destination "$home" --config "$RUNNER_TEMP/chezmoi.toml" --persistent-state "$RUNNER_TEMP/state.boltdb")
+          chezmoi init "${args[@]}" --config-path "$RUNNER_TEMP/chezmoi.toml" \
+            --promptChoice "Which machine is this=${{ matrix.machine }}" \
+            --promptString "NAS address for the gt500 ssh alias (blank to skip)=192.0.2.10" \
+            --promptString "NAS ssh port=22" \
+            --promptString "Router address for the router ssh alias (blank to skip)=192.0.2.1" \
+            --promptString "Router ssh port=22"
+          chezmoi apply "${args[@]}" --exclude=scripts
+
+          # Repo files must never land in $HOME.
+          for f in README.md LICENSE install.sh Brewfile Brewfile.personal Brewfile.work docs; do
+            if [ -e "$home/$f" ]; then echo "::error::$f leaked into the home directory"; exit 1; fi
+          done
+
+          # The files that matter exist, with the right permissions.
+          for f in .zshrc .zprofile .gitconfig .p10k.zsh.local .ssh/config .claude/settings.json; do
+            if [ ! -f "$home/$f" ]; then echo "::error::$f was not written"; exit 1; fi
+          done
+          test "$(stat -f %Lp "$home/.ssh/config")" = 600
+
+          # Run scripts render and parse for this machine.
+          for t in run_onchange_after_*.tmpl; do
+            out="$RUNNER_TEMP/${t%.tmpl}"
+            chezmoi execute-template "${args[@]}" < "$t" > "$out"
+            bash -n "$out"
+            shellcheck -S warning "$out"
+          done
