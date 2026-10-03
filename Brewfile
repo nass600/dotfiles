@@ -57,7 +57,6 @@ cask "font-meslo-lg-nerd-font"
 cask "ghostty"
 cask "google-chrome"
 cask "istat-menus"
-cask "iterm2" # still the terminal in daily use; drop once the move to Ghostty sticks
 cask "logi-options+"
 cask "makemkv"
 cask "mkvtoolnix-app"

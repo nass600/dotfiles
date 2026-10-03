@@ -75,10 +75,20 @@ The script ends with this list too:
 
 - Open a new terminal so the new shell config loads
 - Restore Claude Code memory into `~/.claude/projects`
+- On the personal Mac, restore the JDownloader backup (see below)
 - Sign in to AWS (`aws configure sso`, or restore `~/.aws`)
 - Launch Docker Desktop once and accept its terms
 - Grant app permissions as they ask: Raycast, BetterSnapTool, iStat Menus, Logi Options+
 - Log out and back in for the remaining macOS settings
+
+### App settings that are not plain files
+
+Most app config is applied by chezmoi. Two cases work differently:
+
+| App | How its settings travel |
+|---|---|
+| **MKVToolNix** | Seeded from this repo on first install (`Library/Preferences/bunkus.org/mkvtoolnix-gui/`). The app rewrites the file afterwards, so chezmoi leaves it alone once it exists. To capture new defaults, copy the live file back into the repo |
+| **JDownloader** (personal Mac) | A binary backup holding accounts and settings, kept in iCloud Drive under `Config/jDownloader/`. **Before wiping:** *Settings → Backup → Create backup* and save it there. **After installing:** *Settings → Backup → Restore backup* |
 
 ### Testing a branch
 
@@ -160,13 +170,14 @@ dotfiles/
 ├── private_dot_ssh/                           # → ~/.ssh/config (1Password agent, gt500, router) + router public key
 ├── private_dot_claude/                        # → ~/.claude/CLAUDE.md, settings.json
 ├── Library/Application Support/Cursor/User/   # → Cursor settings.json
+├── Library/Preferences/bunkus.org/            # → MKVToolNix GUI defaults
 │
 ├── run_once_after_10-macos-defaults.sh        # macOS system settings
 ├── run_onchange_after_20-brew-bundle.sh.tmpl  # brew bundle, on any Brewfile change
 └── run_onchange_after_30-runtimes.sh.tmpl     # node, python, uv tools, pipx, extensions
 ```
 
-Files with a `create_` prefix (Claude and Cursor settings) are written only when missing, because those apps rewrite them.
+Files with a `create_` prefix (Claude, Cursor and MKVToolNix settings) are written only when missing, because those apps rewrite them.
 
 ## What is deliberately not here
 
