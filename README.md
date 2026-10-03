@@ -11,13 +11,31 @@ My personal macOS setup. One command provisions a fresh MacBook from zero: dotfi
 
 ### Before you start
 
-Have these at hand. None of them can be scripted:
+**Nothing needs to be installed first.** Finish the macOS setup assistant, connect to the internet and open Terminal. The script installs everything else itself, including Homebrew, the Xcode Command Line Tools and 1Password.
 
-- Your **macOS password**. It is asked for once, at the start.
-- Your **1Password sign-in**: the Emergency Kit, or another device that is already signed in.
-- Your **Apple ID**, already owning the App Store apps listed in the `Brewfile`.
-- The **NAS and router addresses and ssh ports** for the `gt500` and `router` aliases.
-- A backup of `~/.claude/projects` from the old machine, if you want your Claude Code memory.
+What it cannot do is know your credentials. Have these at hand:
+
+| You need | Used for | Tip |
+|---|---|---|
+| Your **macOS password** | Asked once, at the start | The account must be an administrator |
+| Your **1Password sign-in** | Secrets and ssh keys | Emergency Kit, or another signed-in device to scan a QR code from |
+| Your **Apple ID** | App Store apps in the `Brewfile` | Sign in during the macOS setup assistant and this pause disappears |
+| **NAS and router addresses and ssh ports** | The `gt500` and `router` ssh aliases | Leave blank to skip an alias |
+
+Optional, from the old machine: a copy of `~/.claude/projects` (Claude Code memory) and `~/.aws` (AWS credentials). Neither is in this repo.
+
+### Where it stops and waits for you
+
+The run is unattended except for these moments. Each one tells you exactly what to do and re-checks when you press Enter.
+
+| When | What you do |
+|---|---|
+| Start | Type your macOS password |
+| After 1Password is installed (a few minutes in) | Sign in, then enable **Integrate with 1Password CLI** and **Use the SSH agent** under *Settings → Developer*, and approve the Touch ID prompt |
+| Before the dotfiles are applied | Answer: which machine (`personal` / `work`), NAS address and port, router address and port |
+| During package install, only if not already signed in | Sign in to the App Store |
+| During tool install | Approve 1Password's ssh key prompts for GitHub |
+| End | Approve the GitHub CLI sign-in in the browser |
 
 ### Run it
 
@@ -34,7 +52,7 @@ What happens, in order:
 1. Asks for your password once and keeps the session alive for the whole run
 2. Installs Homebrew, which installs the Xcode Command Line Tools on its own
 3. Installs chezmoi, the GitHub CLI and 1Password
-4. **Pause:** waits until 1Password can hand over secrets and ssh keys. In the 1Password app, sign in, then under *Settings → Developer* enable **Integrate with 1Password CLI** and **Use the SSH agent**
+4. **Pause:** opens 1Password and waits until it can hand over secrets and ssh keys (see the table above)
 5. Asks which machine this is (`personal` or `work`) and for the home network hosts
 6. Applies everything: dotfiles, macOS defaults, Homebrew packages, then language runtimes and tools
 7. **Pause:** if App Store apps are missing, opens the App Store and waits for you to sign in

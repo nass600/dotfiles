@@ -138,16 +138,29 @@ load_brew
 banner "Installing prerequisite tools"
 brew install chezmoi gh
 brew install --cask 1password 1password-cli || true
+if [ ! -d /Applications/1Password.app ] || ! command -v op >/dev/null 2>&1; then
+    echo ""
+    echo "1Password could not be installed, and nothing else can proceed without it."
+    echo "Check the Homebrew error above, then run this script again."
+    exit 1
+fi
 
 # --- 1Password ---
 # Two things must be true before applying, and each needs a click in the 1Password app.
 banner "1Password"
 open -a "1Password" 2>/dev/null || true
 
-wait_until op_token_ok "The 1Password CLI cannot read $OP_NPM_ITEM.
-  1. Open 1Password and sign in
-  2. Settings -> Developer -> enable 'Integrate with 1Password CLI'
-  3. Check the item exists in the Personal vault with a field named 'credential'"
+echo "1Password has been installed and opened. This is the one step that needs you:"
+echo "  1. Sign in to 1Password"
+echo "  2. Settings -> Developer -> enable 'Integrate with 1Password CLI'"
+echo "  3. Settings -> Developer -> enable 'Use the SSH agent'"
+echo "  4. Approve the authorisation prompt (Touch ID or password) when it appears"
+ask "Press Enter when that is done... "
+
+wait_until op_token_ok "The 1Password CLI cannot read $OP_NPM_ITEM yet.
+  - Is 'Integrate with 1Password CLI' enabled under Settings -> Developer?
+  - Did you approve the authorisation prompt?
+  - Does the item exist in the Personal vault with a field named 'credential'?"
 
 wait_until ssh_agent_ok "The 1Password SSH agent is not serving any keys.
   Settings -> Developer -> enable 'Use the SSH agent'
