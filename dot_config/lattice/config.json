@@ -1,0 +1,13 @@
+{
+  "defaultGrid": { "cols": 2, "rows": 2 },
+  "wrap": false,
+  "hotkeys": {
+    "modifiers": ["ctrl", "cmd"],
+    "overview": "g"
+  },
+  "overview": {
+    "tiles": "number",
+    "hideAfterSwitch": 0.4,
+    "hideAfterOpen": 3.0
+  }
+}

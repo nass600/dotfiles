@@ -1,0 +1,39 @@
+#!/bin/bash
+# Builds Lattice {{ .lattice.version }} from {{ .lattice.repo }} and installs it in /Applications.
+# chezmoi re-runs this whenever the version in .chezmoidata/runtimes.toml changes.
+#
+# Built locally on purpose: an app compiled on this Mac carries no quarantine flag, so it opens
+# without Gatekeeper prompts and needs no Apple Developer signature.
+set -euo pipefail
+
+REPO="{{ .lattice.repo }}"
+VERSION="{{ .lattice.version }}"
+APP="/Applications/Lattice.app"
+
+if ! command -v swift >/dev/null 2>&1; then
+    echo "!! swift not found. Install the Xcode Command Line Tools (xcode-select --install), then run \`chezmoi apply\` again."
+    exit 1
+fi
+
+work="$(mktemp -d)"
+trap 'rm -rf "$work"' EXIT
+
+echo "Building Lattice $VERSION..."
+git -c advice.detachedHead=false clone --quiet --depth 1 --branch "$VERSION" "$REPO" "$work/src"
+(cd "$work/src" && swift build -c release >/dev/null)
+
+bundle="$work/Lattice.app"
+mkdir -p "$bundle/Contents/MacOS"
+cp "$work/src/Resources/Info.plist" "$bundle/Contents/Info.plist"
+cp "$work/src/.build/release/Lattice" "$bundle/Contents/MacOS/Lattice"
+codesign --force --sign - --entitlements "$work/src/Resources/Lattice.entitlements" "$bundle" >/dev/null 2>&1
+
+# Swap the running copy for the new one.
+osascript -e 'quit app "Lattice"' >/dev/null 2>&1 || true
+sleep 1
+ditto "$bundle" "$APP"
+open -a "$APP" || true
+
+echo "Lattice $VERSION installed."
+echo "  A locally built app counts as new to macOS: enable it again under"
+echo "  System Settings -> Privacy & Security -> Accessibility."

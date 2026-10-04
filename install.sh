@@ -203,4 +203,6 @@ echo "  - personal Mac: restore the JDownloader backup (Settings -> Backup) from
 echo "  - sign in to AWS: aws configure sso (or restore ~/.aws)"
 echo "  - launch Docker Desktop once and accept its terms"
 echo "  - grant app permissions as they ask (Raycast, BetterSnapTool, iStat Menus, Logi Options+)"
+echo "  - Lattice (desktop grid): enable it under Privacy & Security -> Accessibility,"
+echo "    create your desktops in Mission Control, and turn on Accessibility -> Display -> Reduce motion"
 echo "  - log out and back in for the remaining macOS settings"

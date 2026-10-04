@@ -73,3 +73,10 @@
     primary = 34
 [prompt.work]
     primary = 33
+
+# Lattice: 2D grid navigation for macOS Spaces. Built from source because the fork carries
+# configurable hotkeys and overview settings that upstream does not have yet.
+# To update: tag the fork, change `version`, run `chezmoi apply`.
+[lattice]
+    repo = "https://github.com/nass600/lattice"
+    version = "v0.8.0+nass600.1"

@@ -44,6 +44,10 @@ defaults write com.apple.finder FXArrangeGroupViewBy -string "Name"
 # --- Desktop Services ---
 defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
 
+# --- Mission Control ---
+# Keep desktops in a fixed order; Lattice maps them onto a grid by position.
+defaults write com.apple.dock mru-spaces -bool false
+
 # --- Workspace ---
 mkdir -p "$HOME/Workspace/nass600"
 

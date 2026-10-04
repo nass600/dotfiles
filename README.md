@@ -79,7 +79,25 @@ The script ends with this list too:
 - Sign in to AWS (`aws configure sso`, or restore `~/.aws`)
 - Launch Docker Desktop once and accept its terms
 - Grant app permissions as they ask: Raycast, BetterSnapTool, iStat Menus, Logi Options+
+- Set up the desktop grid: see [Desktop grid (Lattice)](#desktop-grid-lattice)
 - Log out and back in for the remaining macOS settings
+
+### Desktop grid (Lattice)
+
+macOS desktops are a single row. [Lattice](https://github.com/nass600/lattice) lays the existing ones out as a grid, so Mission Control and dragging windows between desktops keep working.
+
+| Keys | Action |
+|---|---|
+| Ctrl+Cmd+arrows | Move one desktop in the grid |
+| Ctrl+Cmd+G | Show the grid; press a number to jump |
+
+It is built from source from a fork that adds configurable hotkeys and overview settings. The version is pinned in `.chezmoidata/runtimes.toml`; its settings are in `dot_config/lattice/config.json`. To update, tag the fork, change the version and run `chezmoi apply`.
+
+Three things macOS will not let a script do, so they are manual once per Mac:
+
+- Enable **Lattice** under *Privacy & Security → Accessibility*. Repeat after each Lattice update, because a locally built app counts as new.
+- Create the desktops in Mission Control. Lattice arranges the ones that exist; it does not create them.
+- Turn on *Accessibility → Display → Reduce motion*. Without it macOS slides sideways even when you move up or down.
 
 ### App settings that are not plain files
 
@@ -166,7 +184,7 @@ dotfiles/
 ├── dot_p10k.zsh.local.tmpl                    # → ~/.p10k.zsh.local (accent per machine)
 ├── dot_gitconfig.tmpl / dot_gitignore         # → ~/.gitconfig, ~/.gitignore
 ├── private_dot_npmrc.tmpl                     # → ~/.npmrc (token from 1Password)
-├── dot_config/ghostty, dot_config/micro       # → ~/.config/...
+├── dot_config/ghostty, micro, lattice          # → ~/.config/...
 ├── private_dot_ssh/                           # → ~/.ssh/config (1Password agent, gt500, router) + router public key
 ├── private_dot_claude/                        # → ~/.claude/CLAUDE.md, settings.json
 ├── Library/Application Support/Cursor/User/   # → Cursor settings.json
@@ -174,7 +192,9 @@ dotfiles/
 │
 ├── run_once_after_10-macos-defaults.sh        # macOS system settings
 ├── run_onchange_after_20-brew-bundle.sh.tmpl  # brew bundle, on any Brewfile change
-└── run_onchange_after_30-runtimes.sh.tmpl     # node, python, uv tools, pipx, extensions
+├── run_onchange_after_30-runtimes.sh.tmpl     # node, python, uv tools, pipx, extensions
+├── run_onchange_after_40-lattice.sh.tmpl      # builds and installs the desktop-grid app
+└── Library/LaunchAgents/com.nass600.lattice.plist  # starts it at login
 ```
 
 Files with a `create_` prefix (Claude, Cursor and MKVToolNix settings) are written only when missing, because those apps rewrite them.
