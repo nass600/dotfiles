@@ -79,4 +79,4 @@
 # To update: tag the fork, change `version`, run `chezmoi apply`.
 [lattice]
     repo = "https://github.com/nass600/lattice"
-    version = "v0.8.0+nass600.1"
+    version = "v0.8.0+nass600.2"

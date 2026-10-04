@@ -91,7 +91,7 @@ macOS desktops are a single row. [Lattice](https://github.com/nass600/lattice) l
 | Ctrl+Cmd+arrows | Move one desktop in the grid |
 | Ctrl+Cmd+G | Show the grid; press a number to jump |
 
-It is built from source from a fork that adds configurable hotkeys and overview settings. The version is pinned in `.chezmoidata/runtimes.toml`; its settings are in `dot_config/lattice/config.json`. To update, tag the fork, change the version and run `chezmoi apply`.
+It is built from source from a fork that adds configurable hotkeys, overview settings and start at login (`"startAtLogin": true` in its config, so no separate login item is needed). The version is pinned in `.chezmoidata/runtimes.toml`; its settings are in `dot_config/lattice/config.json`. To update, tag the fork, change the version and run `chezmoi apply`.
 
 Three things macOS will not let a script do, so they are manual once per Mac:
 
@@ -193,8 +193,7 @@ dotfiles/
 ├── run_once_after_10-macos-defaults.sh        # macOS system settings
 ├── run_onchange_after_20-brew-bundle.sh.tmpl  # brew bundle, on any Brewfile change
 ├── run_onchange_after_30-runtimes.sh.tmpl     # node, python, uv tools, pipx, extensions
-├── run_onchange_after_40-lattice.sh.tmpl      # builds and installs the desktop-grid app
-└── Library/LaunchAgents/com.nass600.lattice.plist  # starts it at login
+└── run_onchange_after_40-lattice.sh.tmpl      # builds and installs the desktop-grid app
 ```
 
 Files with a `create_` prefix (Claude, Cursor and MKVToolNix settings) are written only when missing, because those apps rewrite them.
