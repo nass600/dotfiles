@@ -1,0 +1,18 @@
+{{- if .nas_host -}}
+Host gt500
+	HostName {{ .nas_host }}
+	Port {{ .nas_port }}
+	User {{ .github_user }}
+
+{{ end -}}
+{{- if .router_host -}}
+Host router
+	HostName {{ .router_host }}
+	Port {{ .router_port }}
+	User {{ .github_user }}
+	IdentityFile ~/.ssh/asus_router.pub
+	IdentitiesOnly yes
+
+{{ end -}}
+Host *
+	IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"

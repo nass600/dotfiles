@@ -1,0 +1,45 @@
+#!/bin/sh
+# Installs everything in Brewfile plus Brewfile.{{ .machine }}.
+# chezmoi re-runs this whenever either file changes (the hashes below are part of the script).
+#   Brewfile: {{ include "Brewfile" | sha256sum }}
+#   Brewfile.{{ .machine }}: {{ include (printf "Brewfile.%s" .machine) | sha256sum }}
+
+SRC="{{ .chezmoi.sourceDir }}"
+SHARED="$SRC/Brewfile"
+MACHINE="$SRC/Brewfile.{{ .machine }}"
+
+if ! command -v brew >/dev/null 2>&1 && [ -x /opt/homebrew/bin/brew ]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+
+# Third-party taps must be trusted before Homebrew will load their formulae.
+for tap in $(grep -h '^tap ' "$SHARED" "$MACHINE" | sed -E 's/^tap "([^"]+)".*/\1/'); do
+    brew tap "$tap" >/dev/null 2>&1 || true
+    brew trust "$tap" >/dev/null 2>&1 || true
+done
+
+# App Store apps need a signed-in App Store, and `mas` cannot sign in for you.
+# Only stop when an app from the Brewfiles is actually missing.
+command -v mas >/dev/null 2>&1 || brew install mas
+installed_mas="$(mas list 2>/dev/null || true)"
+missing_mas=0
+for id in $(grep -h '^mas ' "$SHARED" "$MACHINE" | sed -E 's/.*id: *([0-9]+).*/\1/'); do
+    echo "$installed_mas" | grep -q "^ *$id " || missing_mas=1
+done
+if [ "$missing_mas" = 1 ] && [ -r /dev/tty ]; then
+    echo ""
+    echo "Some App Store apps are missing. Sign in to the App Store, then come back here."
+    open -a "App Store" || true
+    printf "Press Enter once you're signed in to continue... "
+    read -r _ < /dev/tty || true
+fi
+
+status=0
+brew bundle --file="$SHARED" || status=1
+brew bundle --file="$MACHINE" || status=1
+
+if [ "$status" != 0 ]; then
+    echo ""
+    echo "brew bundle reported failures. Fix them and run \`chezmoi apply\` again; this script retries until it passes."
+fi
+exit "$status"

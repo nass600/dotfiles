@@ -1,7 +1,31 @@
+{{- /* Asked once per machine at `chezmoi init`; answers live in ~/.config/chezmoi/chezmoi.toml, never in git. */ -}}
+{{- $machine := promptChoiceOnce . "machine" "Which machine is this" (list "personal" "work") "personal" -}}
+
+{{- /* Home network hosts for ~/.ssh/config. Kept out of this public repo; a blank answer skips the Host block. */ -}}
+{{- $nasHost := promptStringOnce . "nas_host" "NAS address for the gt500 ssh alias (blank to skip)" "" -}}
+{{- $nasPort := "" -}}
+{{- if $nasHost -}}
+{{-   $nasPort = promptStringOnce . "nas_port" "NAS ssh port" "22" -}}
+{{- end -}}
+{{- $routerHost := promptStringOnce . "router_host" "Router address for the router ssh alias (blank to skip)" "" -}}
+{{- $routerPort := "" -}}
+{{- if $routerHost -}}
+{{-   $routerPort = promptStringOnce . "router_port" "Router ssh port" "22" -}}
+{{- end -}}
+
+{{- /* CI has no 1Password: templates that read secrets are skipped there. */ -}}
+{{- $secrets := eq (env "CI") "" -}}
+
 [data]
     name = "Ignacio Velazquez"
     email = "ivelazquez85@gmail.com"
     github_user = "nass600"
+    machine = {{ $machine | quote }}
+    nas_host = {{ $nasHost | quote }}
+    nas_port = {{ $nasPort | quote }}
+    router_host = {{ $routerHost | quote }}
+    router_port = {{ $routerPort | quote }}
+    secrets = {{ $secrets }}
 
 [onepassword]
     command = "op"

@@ -12,6 +12,16 @@ if [ ! -d "$ZINIT_HOME" ]; then
 fi
 source "${ZINIT_HOME}/zinit.zsh"
 
+# --- History ---
+HIST_STAMPS="yyyy-mm-dd"
+setopt HIST_EXPIRE_DUPS_FIRST
+setopt HIST_IGNORE_DUPS
+setopt HIST_IGNORE_ALL_DUPS
+setopt HIST_IGNORE_SPACE
+setopt HIST_FIND_NO_DUPS
+setopt HIST_SAVE_NO_DUPS
+unsetopt share_history
+
 # --- Plugins: Oh My Zsh snippets ---
 zinit snippet OMZL::git.zsh
 zinit snippet OMZP::git
@@ -22,6 +32,7 @@ zinit snippet OMZP::macos
 zinit snippet OMZP::npm
 zinit snippet OMZP::nvm
 zinit snippet OMZP::pyenv
+zinit snippet OMZP::poetry
 zinit snippet OMZP::aws
 zinit snippet OMZP::fzf
 
@@ -44,6 +55,18 @@ _BLISS_DIRCOLORS="${ZINIT[PLUGINS_DIR]}/joshjon---bliss-dircolors/bliss.dircolor
 [[ -f "$_BLISS_DIRCOLORS" ]] && eval "$(gdircolors $_BLISS_DIRCOLORS)"
 zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
 
+# --- Keys ---
+bindkey '\e[1~' beginning-of-line
+bindkey '\e[4~' end-of-line
+
+# --- fzf ---
+export FZF_TMUX=0
+export FZF_DEFAULT_OPTS="--height 100% --reverse"
+
+# --- zsh-autosuggestions ---
+ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=15
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=240"
+
 # --- Language ---
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -63,8 +86,11 @@ export PYENV_ROOT="$HOME/.pyenv"
 command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 
-# --- Poetry / pipx ---
+# --- uv tools / pipx ---
 export PATH="$HOME/.local/bin:$PATH"
+
+# --- Bun globals ---
+export PATH="$HOME/.bun/bin:$PATH"
 
 # --- Tesseract ---
 export TESSDATA_PREFIX="/opt/homebrew/share/tessdata"
@@ -78,6 +104,16 @@ alias la="gls -GA --color=always"
 alias ll="gls -alF --color=always"
 alias ls="gls -GFh --color=always"
 alias main="git pull origin main --rebase && git fetch --tags"
+alias gpf="git pull origin main --rebase && git fetch --tags"
+
+# --- Homebrew drift ---
+# Lists what is installed but declared in neither Brewfile. Add it to a Brewfile or let it go.
+brewdrift() {
+    local src machine
+    src="$(chezmoi source-path)" || return
+    machine="$(chezmoi execute-template '{{ .machine }}')" || return
+    cat "$src/Brewfile" "$src/Brewfile.$machine" | brew bundle cleanup --file=-
+}
 
 # --- Zsh syntax highlighting theme ---
 typeset -A ZSH_HIGHLIGHT_STYLES
