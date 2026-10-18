@@ -1,0 +1,64 @@
+name: CI
+
+# Smoke test: applies the repo into a scratch home for each machine type and checks that
+# templates render, scripts parse, Brewfiles load and no repo file leaks into $HOME.
+# It does not install packages or touch system settings.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify (${{ matrix.machine }})
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        machine: [personal, work]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install chezmoi and shellcheck
+        run: brew install chezmoi shellcheck
+
+      - name: Lint static scripts
+        run: |
+          sh -n install.sh
+          shellcheck -S warning install.sh
+
+      - name: Brewfiles parse
+        run: |
+          for f in packages/Brewfile packages/Brewfile.personal packages/Brewfile.work; do
+            brew bundle list --all --file="$f" > /dev/null
+          done
+
+      - name: Apply into a scratch home
+        run: |
+          home="$RUNNER_TEMP/home"; mkdir -p "$home"
+          args=(--source "$PWD" --destination "$home" --config "$RUNNER_TEMP/chezmoi.toml" --persistent-state "$RUNNER_TEMP/state.boltdb")
+          chezmoi init "${args[@]}" --config-path "$RUNNER_TEMP/chezmoi.toml" \
+            --promptChoice "Which machine is this=${{ matrix.machine }}"
+          chezmoi apply "${args[@]}" --exclude=scripts
+
+          # Repo files must never land in $HOME.
+          for f in README.md LICENSE install.sh packages .chezmoiroot .chezmoiscripts; do
+            if [ -e "$home/$f" ]; then echo "::error::$f leaked into the home directory"; exit 1; fi
+          done
+
+          # The files that matter exist, with the right permissions.
+          for f in .zshrc .zprofile .gitconfig .p10k.zsh.local .ssh/config .claude/settings.json; do
+            if [ ! -f "$home/$f" ]; then echo "::error::$f was not written"; exit 1; fi
+          done
+          test "$(stat -f %Lp "$home/.ssh/config")" = 600
+
+          # Run scripts render and parse for this machine.
+          for t in home/.chezmoiscripts/run_*.tmpl; do
+            out="$RUNNER_TEMP/$(basename "${t%.tmpl}")"
+            chezmoi execute-template "${args[@]}" < "$t" > "$out"
+            bash -n "$out"
+            shellcheck -S warning "$out"
+          done

@@ -1,0 +1,15 @@
+{{- /* Asked once per machine at `chezmoi init`; answers live in ~/.config/chezmoi/chezmoi.toml, never in git. */ -}}
+{{- $machine := promptChoiceOnce . "machine" "Which machine is this" (list "personal" "work") "personal" -}}
+
+{{- /* CI has no 1Password: templates that read secrets are skipped there. */ -}}
+{{- $secrets := eq (env "CI") "" -}}
+
+[data]
+    name = "Ignacio Velazquez"
+    email = "ivelazquez85@gmail.com"
+    github_user = "nass600"
+    machine = {{ $machine | quote }}
+    secrets = {{ $secrets }}
+
+[onepassword]
+    command = "op"

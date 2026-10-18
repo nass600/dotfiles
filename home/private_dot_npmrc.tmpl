@@ -1,1 +1,3 @@
+{{- if .secrets -}}
 //npm.pkg.github.com/:_authToken={{ onepasswordRead "op://Personal/GH_NPM_REGISTRY/credential" }}
+{{- end }}

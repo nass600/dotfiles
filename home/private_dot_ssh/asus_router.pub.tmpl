@@ -1,0 +1,3 @@
+{{- if .secrets -}}
+{{ onepasswordRead "op://Private/ASUS Router/public key" | trim }} ASUS Router
+{{ end -}}

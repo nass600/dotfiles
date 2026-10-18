@@ -1,0 +1,5 @@
+# Secrets come from 1Password, which CI does not have.
+{{ if not .secrets }}
+.npmrc
+.ssh/asus_router.pub
+{{ end }}

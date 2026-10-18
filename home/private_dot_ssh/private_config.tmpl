@@ -1,0 +1,10 @@
+{{- /* The home network hosts are the text of the "Home network" secure note in 1Password, pasted
+       in as is, so the public repo never contains the LAN layout. To add or change a host, edit
+       that note and run `chezmoi apply`. CI has no 1Password and gets only the agent block. */ -}}
+{{- if .secrets -}}
+# Home network hosts: from the "Home network" note in 1Password (Private vault).
+{{ onepasswordRead "op://Private/Home network/notesPlain" | trim }}
+
+{{ end -}}
+Host *
+	IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"

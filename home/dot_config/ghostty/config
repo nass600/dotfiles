@@ -3,12 +3,11 @@ font-family = MesloLGS Nerd Font Mono
 font-size = 14
 
 # Theme
-theme = dark:Catppuccin Mocha,light:Catppuccin Latte
+theme = dark:Monokai Pro,light:Monokai Pro Light
 
 # Window
 window-padding-x = 8
 window-padding-y = 8
-window-decoration = false
 
 # Shell
 shell-integration = zsh
