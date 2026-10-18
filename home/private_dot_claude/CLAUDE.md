@@ -24,3 +24,7 @@ These apply in every project. A repo's own `AGENTS.md` adds to them.
 # graphify
 - **graphify** (`~/.claude/skills/graphify/SKILL.md`) - any input to knowledge graph. Trigger: `/graphify`
 When the user types `/graphify`, use the installed graphify skill or instructions before doing anything else.
+
+<!-- postman-cli:installation:start -->
+Postman CLI is installed on this device, and can be used for API Engineering work.
+<!-- postman-cli:installation:end -->

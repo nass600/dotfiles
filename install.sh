@@ -14,6 +14,7 @@ set -e
 
 REPO="nass600/dotfiles"
 OP_NPM_ITEM="op://Personal/GH_NPM_REGISTRY/credential"
+OP_NETWORK_ITEM="op://Private/Home network/notesPlain"
 OP_SSH_SOCK="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
 
 MODE="install"
@@ -49,6 +50,7 @@ load_brew() {
 # Reading a real item is the only reliable test: with the desktop-app integration `op whoami`
 # reports "not signed in" until something asks for a secret.
 op_token_ok()   { command -v op >/dev/null 2>&1 && op read "$OP_NPM_ITEM" >/dev/null 2>&1; }
+op_network_ok() { op read "$OP_NETWORK_ITEM" 2>/dev/null | grep -q "^Host "; }
 ssh_agent_ok()  { [ -S "$OP_SSH_SOCK" ] && SSH_AUTH_SOCK="$OP_SSH_SOCK" ssh-add -l >/dev/null 2>&1; }
 github_ssh_ok() {
     SSH_AUTH_SOCK="$OP_SSH_SOCK" ssh -o BatchMode=yes -o ConnectTimeout=8 -o StrictHostKeyChecking=accept-new \
@@ -86,6 +88,7 @@ run_check() {
     row "chezmoi"                            "$(is command -v chezmoi)"               "installed by this script"
     row "1Password app"                      "$(is test -d /Applications/1Password.app)" "installed by this script"
     row "1Password CLI can read secrets"     "$(is op_token_ok)"                      "Settings > Developer > Integrate with 1Password CLI; item $OP_NPM_ITEM"
+    row "Home network item in 1Password"     "$(is op_network_ok)"                    "Private vault secure note \"Home network\" holding the ssh Host blocks"
     row "1Password SSH agent has keys"       "$(is ssh_agent_ok)"                     "1Password > Settings > Developer > Use the SSH agent"
     row "GitHub reachable over SSH"          "$(is github_ssh_ok)"                    "needed for the private doubtfire and parker installs"
     row "GitHub CLI signed in"               "$(is gh auth status)"                   "gh auth login --git-protocol ssh --skip-ssh-key --web -s workflow"
@@ -113,7 +116,6 @@ echo "Have these ready:"
 echo "  - your macOS password (asked once)"
 echo "  - your 1Password sign-in (Emergency Kit or another signed-in device)"
 echo "  - your Apple ID, for the App Store"
-echo "  - the NAS and router addresses and ssh ports"
 
 # --- sudo, once ---
 # Homebrew and a few app installers need it. Asking now and keeping it alive avoids
@@ -162,13 +164,16 @@ wait_until op_token_ok "The 1Password CLI cannot read $OP_NPM_ITEM yet.
   - Did you approve the authorisation prompt?
   - Does the item exist in the Personal vault with a field named 'credential'?"
 
+wait_until op_network_ok "Cannot read the \"Home network\" item from the Private vault.
+  It must be a secure note whose text is the ssh config Host blocks (gt500, router)."
+
 wait_until ssh_agent_ok "The 1Password SSH agent is not serving any keys.
   Settings -> Developer -> enable 'Use the SSH agent'
   Without it the private tools (doubtfire, parker) cannot be installed." optional \
     || echo "Continuing without the SSH agent. Run \`chezmoi apply\` again once it is enabled."
 
 # --- Apply ---
-# Asks which machine this is and for the home network hosts, then applies dotfiles, macOS defaults,
+# Asks which machine this is, then applies dotfiles, macOS defaults,
 # Homebrew packages and language runtimes, in that order.
 banner "Applying dotfiles"
 APPLY_OK=1
@@ -194,6 +199,7 @@ if [ "$APPLY_OK" = 1 ]; then
     echo "The apply finished."
 else
     echo "The apply stopped early. Fix the error above and run: chezmoi apply"
+    echo "Each step's full output is in ~/Library/Logs/dotfiles/"
 fi
 echo ""
 echo "Left to do by hand:"

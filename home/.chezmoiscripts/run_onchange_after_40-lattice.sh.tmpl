@@ -6,6 +6,8 @@
 # without Gatekeeper prompts and needs no Apple Developer signature.
 set -euo pipefail
 
+{{ template "log.sh" "40-lattice" }}
+
 REPO="{{ .lattice.repo }}"
 VERSION="{{ .lattice.version }}"
 APP="/Applications/Lattice.app"
@@ -20,7 +22,7 @@ trap 'rm -rf "$work"' EXIT
 
 echo "Building Lattice $VERSION..."
 git -c advice.detachedHead=false clone --quiet --depth 1 --branch "$VERSION" "$REPO" "$work/src"
-(cd "$work/src" && swift build -c release >/dev/null)
+(cd "$work/src" && swift build -c release >&3 2>&1)   # full build output: in the log only
 
 bundle="$work/Lattice.app"
 mkdir -p "$bundle/Contents/MacOS"

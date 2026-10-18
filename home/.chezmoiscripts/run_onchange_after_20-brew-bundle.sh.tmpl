@@ -1,0 +1,77 @@
+#!/bin/bash
+# Installs everything in packages/Brewfile plus packages/Brewfile.{{ .machine }}.
+# chezmoi re-runs this whenever either file changes (the hashes below are part of the script).
+#   Brewfile: {{ include (joinPath .chezmoi.workingTree "packages/Brewfile") | sha256sum }}
+#   Brewfile.{{ .machine }}: {{ include (joinPath .chezmoi.workingTree (printf "packages/Brewfile.%s" .machine)) | sha256sum }}
+
+{{ template "log.sh" "20-brew-bundle" }}
+
+SRC="{{ .chezmoi.workingTree }}/packages"
+SHARED="$SRC/Brewfile"
+MACHINE="$SRC/Brewfile.{{ .machine }}"
+
+if ! command -v brew >/dev/null 2>&1 && [ -x /opt/homebrew/bin/brew ]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+
+# Third-party taps must be trusted before Homebrew will load their formulae.
+for tap in $(grep -h '^tap ' "$SHARED" "$MACHINE" | sed -E 's/^tap "([^"]+)".*/\1/'); do
+    brew tap "$tap" >/dev/null 2>&1 || true
+    brew trust "$tap" >/dev/null 2>&1 || true
+done
+
+command -v mas >/dev/null 2>&1 || brew install mas
+
+# Build the list to install. Two kinds of entry are dropped because they are already there and
+# would only make `brew bundle` fail on a Mac that is not brand new:
+#   - App Store apps already installed. Found by their store id through Spotlight, because `mas list`
+#     no longer sees installed apps on recent macOS.
+#   - Casks whose app is already in /Applications but was not installed by Homebrew.
+plan="$(mktemp)"
+trap 'rm -f "$plan"' EXIT
+installed_casks=" $(brew list --cask 2>/dev/null | tr '\n' ' ') "
+missing_mas=0
+while IFS= read -r line; do
+    case "$line" in
+        mas\ *)
+            id="$(echo "$line" | sed -E 's/.*id: *([0-9]+).*/\1/')"
+            if [ -n "$(mdfind "kMDItemAppStoreAdamID == $id" 2>/dev/null | head -1)" ]; then
+                continue
+            fi
+            missing_mas=1 ;;
+        cask\ *)
+            token="$(echo "$line" | sed -E 's/^cask "([^"]+)".*/\1/')"
+            if [[ "$installed_casks" != *" $token "* ]]; then
+                app="$(brew info --cask --json=v2 "$token" 2>/dev/null \
+                    | /usr/bin/python3 -c 'import json,sys
+for c in json.load(sys.stdin)["casks"]:
+    for a in c.get("artifacts", []):
+        if isinstance(a, dict) and a.get("app") and isinstance(a["app"][0], str):
+            print(a["app"][0]); raise SystemExit' 2>/dev/null)"
+                if [ -n "$app" ] && [ -e "/Applications/$app" ]; then
+                    echo "Skipping cask $token: /Applications/$app exists but was not installed by Homebrew."
+                    echo "  To let Homebrew manage it: brew install --cask --force $token"
+                    continue
+                fi
+            fi ;;
+    esac
+    echo "$line" >> "$plan"
+done < <(cat "$SHARED" "$MACHINE")
+
+# App Store apps need a signed-in App Store, and `mas` cannot sign in for you.
+if [ "$missing_mas" = 1 ] && [ -r /dev/tty ]; then
+    echo ""
+    echo "Some App Store apps are missing. Sign in to the App Store, then come back here."
+    open -a "App Store" || true
+    printf "Press Enter once you're signed in to continue... "
+    read -r _ < /dev/tty || true
+fi
+
+# --no-upgrade: install what is missing, never upgrade what is already there. Upgrading an app
+# that is running (an editor, a terminal) can leave Homebrew's record half-written; updates stay a
+# deliberate `brew upgrade`.
+if ! brew bundle --no-upgrade --file="$plan"; then
+    echo ""
+    echo "brew bundle reported failures. Fix them and run \`chezmoi apply\` again; this script retries until it passes."
+    exit 1
+fi

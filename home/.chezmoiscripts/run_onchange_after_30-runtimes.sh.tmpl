@@ -6,6 +6,8 @@
 {{- $uv := concat .runtimes.uv_tools $m.uv_tools }}
 {{- $uvGit := concat .runtimes.uv_tools_git $m.uv_tools_git }}
 
+{{ template "log.sh" "30-runtimes" }}
+
 failed=""
 fail() { failed="$failed\n  - $1"; echo "!! $1"; }
 
@@ -50,12 +52,14 @@ ssh-keygen -F github.com >/dev/null 2>&1 \
     || echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" >> "$HOME/.ssh/known_hosts"
 
 # --- uv tools ---
+# --force replaces executables left by an older pip/poetry/pipx install of the same tool, which uv
+# otherwise refuses to overwrite. On a fresh Mac there is nothing to replace.
 {{- range $uv }}
-uv tool install '{{ . }}' || fail "uv tool {{ . }}"
+uv tool install --force '{{ . }}' || fail "uv tool {{ . }}"
 {{- end }}
 {{- range $uvGit }}
 # Private repo: needs the 1Password ssh agent unlocked.
-uv tool install '{{ . }}' || fail "uv tool {{ . }} (is the 1Password ssh agent unlocked?)"
+uv tool install --force '{{ . }}' || fail "uv tool {{ . }} (is the 1Password ssh agent unlocked?)"
 {{- end }}
 
 # --- graphify skill for Claude Code ---

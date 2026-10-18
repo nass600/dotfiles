@@ -127,7 +127,6 @@
   "yaml.validate": true,
   "yaml.schemas": {
     "https://json.schemastore.org/github-workflow.json": "/.github/workflows/*.yml",
-    "file:///Users/ignaciovelazquez/.vscode/extensions/atlassian.atlascode-3.0.1/resources/schemas/pipelines-schema.json": "bitbucket-pipelines.yml",
   },
   "yaml.format.enable": true,
   "typescript.preferences.quoteStyle": "single",

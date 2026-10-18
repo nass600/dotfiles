@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # macOS system settings. chezmoi runs this once per machine, and again whenever this file changes.
 #
 # Verified on macOS 15.7.4 (Sequoia), 2026-10-03: every key below was read back from a machine
@@ -8,6 +8,8 @@
 # Removed because they no longer work:
 #   com.apple.menuextra.clock DateFormat   -> replaced by the Show* keys below
 #   com.apple.loginwindow GuestEnabled     -> needs sudo on /Library/Preferences; guest is off by default
+
+{{ template "log.sh" "10-macos-defaults" }}
 
 echo "Applying macOS defaults..."
 

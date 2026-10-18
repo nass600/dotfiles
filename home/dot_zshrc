@@ -28,13 +28,16 @@ zinit snippet OMZP::git
 zinit snippet OMZP::brew
 zinit snippet OMZP::docker
 zinit snippet OMZP::docker-compose
-zinit snippet OMZP::macos
 zinit snippet OMZP::npm
 zinit snippet OMZP::nvm
 zinit snippet OMZP::pyenv
 zinit snippet OMZP::poetry
 zinit snippet OMZP::aws
 zinit snippet OMZP::fzf
+# macos is a multi-file plugin (it sources music and spotify next to it), so a single-file snippet
+# breaks. Load it from the full repo instead.
+zinit ice depth=1 pick"plugins/macos/macos.plugin.zsh"
+zinit light ohmyzsh/ohmyzsh
 
 # --- Plugins: GitHub ---
 zinit light zsh-users/zsh-completions
@@ -45,9 +48,12 @@ zinit light joshjon/bliss-dircolors
 # --- Prompt: Powerlevel10k ---
 zinit ice depth=1
 zinit light romkatv/powerlevel10k
-[[ -f ~/.p10k.zsh.local ]] && source ~/.p10k.zsh.local
+[[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh              # wizard-generated base config
+[[ -f ~/.p10k.zsh.local ]] && source ~/.p10k.zsh.local  # personal overrides (per-machine accent)
 
 # --- Completions ---
+# Tools such as the Sentry CLI install their completions here.
+fpath=("$HOME/.local/share/zsh/site-functions" $fpath)
 autoload -Uz compinit && compinit
 
 # --- Dircolors ---
@@ -56,6 +62,8 @@ _BLISS_DIRCOLORS="${ZINIT[PLUGINS_DIR]}/joshjon---bliss-dircolors/bliss.dircolor
 zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
 
 # --- Keys ---
+autoload -Uz copy-earlier-word
+zle -N copy-earlier-word
 bindkey '\e[1~' beginning-of-line
 bindkey '\e[4~' end-of-line
 
@@ -110,7 +118,7 @@ alias gpf="git pull origin main --rebase && git fetch --tags"
 # Lists what is installed but declared in neither Brewfile. Add it to a Brewfile or let it go.
 brewdrift() {
     local src machine
-    src="$(chezmoi source-path)" || return
+    src="$(chezmoi execute-template '{{ .chezmoi.workingTree }}')/packages" || return
     machine="$(chezmoi execute-template '{{ .machine }}')" || return
     cat "$src/Brewfile" "$src/Brewfile.$machine" | brew bundle cleanup --file=-
 }
