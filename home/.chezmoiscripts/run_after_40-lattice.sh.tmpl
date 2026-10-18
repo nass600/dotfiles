@@ -50,7 +50,6 @@ else
 fi
 step_done "Lattice"
 if [ "$STEP_FAILED" = 0 ]; then
-    echo "  A locally built app counts as new to macOS: enable it again under"
-    echo "  System Settings -> Privacy & Security -> Accessibility."
+    note_manual "Lattice was just built: enable it under System Settings -> Privacy & Security -> Accessibility (a locally built app counts as new)"
 fi
 exit 0

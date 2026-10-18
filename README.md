@@ -55,9 +55,9 @@ DOTFILES_BRANCH=my-branch sh -c "$(curl -fsSL https://raw.githubusercontent.com/
 
 ### ✋ Left to do by hand
 
-The script prints this list at the end. macOS does not let a script do any of it.
+The run ends with this list, rendered from `home/.chezmoidata/manual.toml` plus notes the steps add (Lattice asks for its Accessibility permission only when it was just built). macOS does not let a script do any of it.
 
-- [ ] Open a new terminal, then log out and back in once
+- [ ] Open a new terminal, then log out and back in once: scroll direction, Finder and Dock settings only apply at login
 - [ ] App Store apps still pending: sign in to the App Store, then `chezmoi apply`
 - [ ] `gh auth login --git-protocol ssh --skip-ssh-key --web -s workflow` the first time you need `gh`, if you skipped it
 - [ ] Grant permissions as apps ask: Raycast, BetterSnapTool, iStat Menus, Logi Options+, Docker Desktop, Lattice (*Accessibility*)
@@ -104,6 +104,7 @@ dotfiles
 └── home/                                         mirrors $HOME
     ├── .chezmoi.toml.tmpl                        init prompt: which machine; Homebrew env for the scripts
     ├── .chezmoidata/runtimes.toml                node, python, npm/PyPI tools, extensions, prompt colours, source builds
+    ├── .chezmoidata/manual.toml                  the "left to do by hand" list, per machine
     ├── .chezmoitemplates/
     │   ├── log.sh                                logging header shared by the scripts
     │   ├── step.sh                               [n/N] progress lines, failure list, shared by every step
@@ -117,7 +118,7 @@ dotfiles
     │   ├── run_after_35-cursor-extensions.sh.tmpl
     │   ├── run_after_40-lattice.sh.tmpl          built from source when the version changes
     │   ├── run_after_90-mas.sh.tmpl              App Store apps
-    │   └── run_after_99-summary.sh.tmpl          the list of what could not be done
+    │   └── run_after_99-summary.sh.tmpl          what could not be done, then what only you can do
     ├── dot_zshrc · dot_zprofile · dot_p10k.zsh*  shell and prompt
     ├── dot_gitconfig.tmpl · dot_gitignore        git
     ├── dot_config/                               ghostty, micro, lattice, homebrew (curl timeout), mise (rendered from runtimes.toml)

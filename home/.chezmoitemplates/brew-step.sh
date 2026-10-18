@@ -29,7 +29,7 @@ brew_update_once() {
     printf 'Updating Homebrew... '
     start=$(date +%s)
     if brew update --quiet >&3 2>&1; then
-        printf 'done (%ss)\n' "$(( $(date +%s) - start ))"
+        printf '%sdone (%ss)%s\n' "$C_DIM" "$(( $(date +%s) - start ))" "$C_OFF"
     else
         printf 'failed after %ss, continuing with the cached index (details in %s)\n' "$(( $(date +%s) - start ))" "$LOG"
     fi

@@ -29,12 +29,23 @@ done
 
 # ---------------------------------------------------------------- helpers
 
+# Colours only on a terminal and never with NO_COLOR: cyan = where you are, green = done,
+# red = failed, yellow = needs you, dim = detail. The chezmoi steps use the same five.
+if { [ -t 1 ] || [ -n "${CLICOLOR_FORCE:-}" ]; } && [ -z "${NO_COLOR:-}" ]; then
+    C_CYAN="$(printf '\033[36m')" C_GREEN="$(printf '\033[32m')" C_RED="$(printf '\033[31m')"
+    C_YELLOW="$(printf '\033[33m')" C_DIM="$(printf '\033[2m')" C_BOLD="$(printf '\033[1m')" C_OFF="$(printf '\033[0m')"
+else
+    C_CYAN="" C_GREEN="" C_RED="" C_YELLOW="" C_DIM="" C_BOLD="" C_OFF=""
+fi
+
 banner() {
     echo ""
-    echo "----------------------------------------------------------------"
-    echo "  $1"
-    echo "----------------------------------------------------------------"
+    printf '%s----------------------------------------------------------------%s\n' "$C_DIM" "$C_OFF"
+    printf '%s  %s%s\n' "$C_CYAN" "$1" "$C_OFF"
+    printf '%s----------------------------------------------------------------%s\n' "$C_DIM" "$C_OFF"
 }
+# A line that needs the human.
+needs_you() { printf '%s●%s %s\n' "$C_YELLOW" "$C_OFF" "$1"; }
 
 load_brew() {
     if ! command -v brew >/dev/null 2>&1 && [ -x /opt/homebrew/bin/brew ]; then
@@ -90,9 +101,9 @@ wait_until() {
     echo "$2"
     last=""
     if [ "${4:-}" = "optional" ]; then
-        printf "  Checking every 5s. Type 'skip' + Enter to continue without it"
+        printf "  %sChecking every 5s. Type 'skip' + Enter to continue without it%s" "$C_DIM" "$C_OFF"
     else
-        printf "  Checking every 5s. Ctrl-C stops the install; it resumes with \`chezmoi apply\`"
+        printf "  %sChecking every 5s. Ctrl-C stops the install; it resumes with \`chezmoi apply\`%s" "$C_DIM" "$C_OFF"
     fi
     while :; do
         why="$("$3" 2>/dev/null)"
@@ -109,7 +120,7 @@ wait_until() {
             return 1
         fi
         if "$1"; then
-            echo " ok"
+            printf ' %sok%s\n' "$C_GREEN" "$C_OFF"
             return 0
         fi
     done
@@ -120,7 +131,10 @@ wait_until() {
 run_check() {
     load_brew
     fails=0
-    row() { if [ "$2" = ok ]; then echo "  ok    $1"; else echo "  FAIL  $1${3:+  ->  $3}"; fails=$((fails + 1)); fi; }
+    row() {
+        if [ "$2" = ok ]; then printf '  %sok%s    %s\n' "$C_GREEN" "$C_OFF" "$1"
+        else printf '  %sFAIL%s  %s%s\n' "$C_RED" "$C_OFF" "$1" "${3:+  ${C_YELLOW}->  $3${C_OFF}}"; fails=$((fails + 1)); fi
+    }
     is() { if "$@" >/dev/null 2>&1; then echo ok; else echo fail; fi; }
 
     echo "Readiness report for $(scutil --get ComputerName 2>/dev/null || hostname) (macOS $(sw_vers -productVersion), $(uname -m))"
@@ -136,7 +150,7 @@ run_check() {
     row "GitHub reachable over SSH"          "$(is github_ssh_ok)"                    "needed for the private doubtfire and parker installs"
     row "GitHub CLI signed in"               "$(is gh auth status)"                   "optional, for releases and PRs: gh auth login --git-protocol ssh --skip-ssh-key --web -s workflow"
     if command -v chezmoi >/dev/null 2>&1 && [ -f "$HOME/.config/chezmoi/chezmoi.toml" ]; then
-        pending="$(chezmoi status 2>/dev/null | wc -l | tr -d ' ')"
+        pending="$(chezmoi status --exclude=scripts 2>/dev/null | wc -l | tr -d ' ')"
         row "Home directory matches the repo"  "$([ "$pending" = 0 ] && echo ok || echo fail)" "$pending pending change(s): run chezmoi diff"
         src="$(chezmoi source-path 2>/dev/null)/.."
         machine="$(chezmoi data --format=json 2>/dev/null | sed -nE 's/.*"machine": *"([a-z]+)".*/\1/p' | head -1)"
@@ -158,7 +172,7 @@ run_check() {
         row "chezmoi initialised"            fail                                     "run the installer"
     fi
     echo ""
-    if [ "$fails" = 0 ]; then echo "Everything is in place."; else echo "$fails item(s) need attention."; fi
+    if [ "$fails" = 0 ]; then printf '%sEverything is in place.%s\n' "$C_GREEN" "$C_OFF"; else printf '%s%s item(s) need attention.%s\n' "$C_YELLOW" "$fails" "$C_OFF"; fi
     return "$fails"
 }
 
@@ -169,7 +183,7 @@ fi
 
 # ---------------------------------------------------------------- install
 
-echo "dotfiles install: fresh Mac to fully configured in one run."
+printf '%sdotfiles install%s  fresh Mac to fully configured in one run\n' "$C_BOLD" "$C_OFF"
 echo ""
 echo "What happens, and what it needs from you:"
 echo "  1. Administrator access      your macOS password, once"
@@ -220,13 +234,13 @@ fi
 # On a re-run they are usually already true: then nothing is asked (the check itself triggers
 # the Touch ID prompt when 1Password wants one).
 banner "2/6  1Password"
-echo "Checking the 1Password CLI, the Home network item and the SSH agent."
-echo "If 1Password asks for Touch ID or your password now, approve it: that is the check talking to the app."
+needs_you "Checking the 1Password CLI, the Home network item and the SSH agent."
+needs_you "If 1Password asks for Touch ID or your password now, approve it: that is the check talking to the app."
 if op_token_ok && op_network_ok && ssh_agent_ok; then
-    echo "Already set up. Nothing to do here."
+    printf '  %sok%s    Already set up. Nothing to do here.\n' "$C_GREEN" "$C_OFF"
 else
     open -a "1Password" 2>/dev/null || true
-    echo "1Password is open. This is the one step that needs you:"
+    needs_you "1Password is open. This is the one step that needs you:"
     echo "  1. Sign in to 1Password"
     echo "  2. Settings -> Developer -> enable 'Integrate with 1Password CLI'"
     echo "  3. Settings -> Developer -> enable 'Use the SSH agent'"
@@ -263,7 +277,7 @@ fi
 # command does, for releases, pull requests and CI. The workflow scope lets it push CI changes.
 if [ "$APPLY_RC" != 130 ] && ! gh auth status >/dev/null 2>&1; then
     banner "6/6  GitHub CLI sign-in (optional)"
-    echo "Only the gh command needs this (releases, pull requests, CI status). Git already works over ssh."
+    needs_you "Only the gh command needs this (releases, pull requests, CI status). Git already works over ssh."
     printf "Sign in now through the browser? [y/N] "
     read -r REPLY < /dev/tty || REPLY=""
     case "$REPLY" in
@@ -284,16 +298,11 @@ case "$APPLY_RC" in
          echo "for example a 1Password item it could not read. Fix the cause and run: chezmoi apply" ;;
 esac
 echo ""
-echo "Left to do by hand:"
-echo "  - open a new terminal so the new shell config loads"
-echo "  - App Store apps still pending: sign in to the App Store, then chezmoi apply"
-echo "  - gh not signed in: gh auth login --git-protocol ssh --skip-ssh-key --web -s workflow (releases, pull requests)"
-echo "  - restore Claude Code memory into ~/.claude/projects (kept out of this public repo)"
-echo "  - personal Mac: restore the JDownloader backup (Settings -> Backup) from iCloud Drive/Config/jDownloader"
-echo "  - sign in to AWS: aws configure sso (or restore ~/.aws)"
-echo "  - launch Docker Desktop once and accept its terms"
-echo "  - grant app permissions as they ask (Raycast, BetterSnapTool, iStat Menus, Logi Options+)"
-echo "  - Lattice (desktop grid): enable it under Privacy & Security -> Accessibility,"
-echo "    create your desktops in Mission Control, and turn on Accessibility -> Display -> Reduce motion"
-echo "  - apps Homebrew no longer ships (unsigned): Aegisub, MakeMKV, rar; download them from their sites if needed"
-echo "  - log out and back in for the remaining macOS settings"
+if [ -f "$LOG_DIR/manual.txt" ]; then
+    printf '%s●%s %sLeft to do by hand%s\n' "$C_YELLOW" "$C_OFF" "$C_BOLD" "$C_OFF"
+    [ "$APPLY_RC" = 0 ] || echo "  - run chezmoi apply first; this list is from the last apply that reached the end"
+    if ! gh auth status >/dev/null 2>&1; then
+        echo "  - gh not signed in: gh auth login --git-protocol ssh --skip-ssh-key --web -s workflow (releases, pull requests)"
+    fi
+    sed 's/^/  - /' "$LOG_DIR/manual.txt"
+fi

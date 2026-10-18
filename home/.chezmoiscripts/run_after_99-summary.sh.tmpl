@@ -1,25 +1,43 @@
 #!/bin/bash
-# Last step of every `chezmoi apply`: one list of everything the steps could not do this time,
-# each with its reason and what to do about it. Nothing waited for these; `chezmoi apply` retries them.
+# Last step of every `chezmoi apply`: one list of everything the steps could not do this time, each
+# with its reason and what to do about it, then the things only a human can do (from
+# .chezmoidata/manual.toml plus notes the steps left). The manual list is also written to
+# ~/Library/Logs/dotfiles/manual.txt so the installer can repeat it as its very last words.
+{{- $m := index .manual .machine }}
 
 {{ template "log.sh" "99-summary" }}
 
+rule="----------------------------------------------------------------"
 echo ""
-echo "----------------------------------------------------------------"
+echo "$rule"
 if [ ! -s "$FAIL_FILE" ]; then
-    echo "  Everything declared in the repo is in place."
+    printf '  %sEverything declared in the repo is in place.%s\n' "$C_GREEN" "$C_OFF"
 else
     n=$(grep -c . "$FAIL_FILE")
-    echo "  $n item(s) could not be done this time. Nothing else waited for them;"
+    printf '  %s%s item(s) could not be done this time.%s Nothing else waited for them;\n' "$C_RED" "$n" "$C_OFF"
     echo "  fix the cause where there is one and run \`chezmoi apply\`: only these are retried."
     echo ""
     while IFS=$'\t' read -r step item reason hint; do
-        printf '  %-22s %s\n' "$step" "$item"
-        [ -n "$reason" ] && printf '  %-22s   %s\n' "" "$(printf '%s' "$reason" | cut -c1-120)"
-        [ -n "$hint" ]   && printf '  %-22s   -> %s\n' "" "$hint"
+        printf '  %s%-22s%s %s%s%s\n' "$C_DIM" "$step" "$C_OFF" "$C_BOLD" "$item" "$C_OFF"
+        [ -n "$reason" ] && printf '  %-22s   %s%s%s\n' "" "$C_DIM" "$(printf '%s' "$reason" | cut -c1-120)" "$C_OFF"
+        [ -n "$hint" ]   && printf '  %-22s   %s-> %s%s\n' "" "$C_YELLOW" "$hint" "$C_OFF"
     done <"$FAIL_FILE"
     echo ""
-    echo "  Full output of each step: $LOG_DIR/<step>.log"
+    printf '  %sFull output of each step: %s/<step>.log%s\n' "$C_DIM" "$LOG_DIR" "$C_OFF"
 fi
-echo "----------------------------------------------------------------"
+echo "$rule"
+
+# --- left to do by hand: notes from this run first, then the standing list ---
+manual="$LOG_DIR/manual.txt"
+{
+    if [ -s "$NOTE_FILE" ]; then
+        cut -f2 "$NOTE_FILE"
+    fi
+{{- range concat .manual.all $m }}
+    echo '{{ . }}'
+{{- end }}
+} >"$manual"
+echo ""
+printf '%s●%s %sLeft to do by hand%s\n' "$C_YELLOW" "$C_OFF" "$C_BOLD" "$C_OFF"
+sed "s/^/  ${C_DIM}·${C_OFF} /" "$manual"
 exit 0
