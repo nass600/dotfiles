@@ -1,6 +1,6 @@
 # dotfiles
 
-[![macos](<https://img.shields.io/badge/macos_15_(sequoia)-white?style=for-the-badge&logo=apple&logoColor=black>)]()
+[![macos](https://img.shields.io/badge/macos_27-white?style=for-the-badge&logo=apple&logoColor=black)]()
 [![chezmoi](https://img.shields.io/badge/managed_with-chezmoi-blue?style=for-the-badge)](https://www.chezmoi.io)
 [![GitHub tag](https://img.shields.io/github/tag/nass600/dotfiles.svg?style=for-the-badge&logo=github)]()
 
