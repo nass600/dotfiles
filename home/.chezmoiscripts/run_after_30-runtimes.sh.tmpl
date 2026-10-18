@@ -1,12 +1,11 @@
 #!/bin/bash
-# Language runtimes and global tools that Homebrew does not own, declared in .chezmoidata/runtimes.toml.
-# Runs on every `chezmoi apply`: each item is checked (a few seconds in total) and only what is
-# missing is installed, one line per item. Items that need a Homebrew formula (nvm, pyenv, pipx, uv)
-# say so when it is absent instead of stopping the apply.
+# Runtimes and global tools, declared in .chezmoidata/runtimes.toml. mise owns node, python and the
+# npm and PyPI tools through ~/.config/mise/config.toml (rendered from the same file); uv installs
+# the private PyPI tools over the 1Password ssh agent, because mise cannot list a private repo's
+# versions. Runs on every `chezmoi apply`: `mise ls --missing` and `uv tool list` say what is
+# missing (a few seconds), and only that is installed, one line per item.
 {{- $m := index .runtimes .machine }}
-{{- $npm := concat .runtimes.npm_globals $m.npm_globals }}
-{{- $uv := concat .runtimes.uv_tools $m.uv_tools }}
-{{- $uvGit := concat .runtimes.uv_tools_git $m.uv_tools_git }}
+{{- $git := concat .runtimes.python_tools_git $m.python_tools_git }}
 
 {{ template "log.sh" "30-runtimes" }}
 {{ template "step.sh" }}
@@ -14,12 +13,8 @@
 if ! command -v brew >/dev/null 2>&1 && [ -x /opt/homebrew/bin/brew ]; then
     eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
-export PATH="$HOME/.local/bin:$PATH"
-export NVM_DIR="$HOME/.nvm"
-mkdir -p "$NVM_DIR"
-
-NODE='{{ .runtimes.node }}'
-PYTHON='{{ .runtimes.python }}'
+export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:$PATH"
+export MISE_YES=1
 FORMULA_HINT="comes from the Homebrew formulae step (20): fix that first"
 
 # GitHub host key, pinned from https://api.github.com/meta, so the private-repo installs below
@@ -28,23 +23,11 @@ mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
 ssh-keygen -F github.com >/dev/null 2>&1 \
     || echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" >>"$HOME/.ssh/known_hosts"
 
-have_nvm=0
-if [ -s "$(brew --prefix nvm 2>/dev/null)/nvm.sh" ]; then
-    # shellcheck disable=SC1091
-    . "$(brew --prefix nvm)/nvm.sh"
-    have_nvm=1
-fi
-
 # --- installers (output goes to the log) ---
-missing_tool() { echo "Error: $1 is not installed"; return 1; }
-install_node()  { nvm install "$NODE" && nvm alias default "$NODE"; }
-install_npm()   { npm install -g "$1"; }
-install_python() {
-    pyenv install --skip-existing "$PYTHON" && pyenv global "$(pyenv latest "$PYTHON")"
-}
-install_pipx()  { pipx install "$1"; }
+missing_tool()  { echo "Error: $1 is not installed"; return 1; }
+mise_install()  { mise install "$1"; }
 # --force replaces executables left by an older pip/poetry/pipx install of the same tool.
-install_uv()    { uv tool install --force "$1"; }
+uv_install()    { uv tool install --force "$1"; }
 install_skill() { graphify install --platform claude; }
 
 # --- checks: build the list of what needs doing ---
@@ -53,46 +36,23 @@ hints=()
 cmds=()
 pending() { names+=("$1"); hints+=("$2"); cmds+=("$3"); }
 
-if [ "$have_nvm" = 0 ]; then
-    pending "node $NODE" "$FORMULA_HINT" "missing_tool nvm"
-elif [ "$(nvm version "$NODE" 2>/dev/null)" = "N/A" ] || [ "$(nvm version default 2>/dev/null)" = "N/A" ]; then
-    pending "node $NODE" "nvm install $NODE" "install_node"
-fi
-{{- range $npm }}
-if [ "$have_nvm" = 1 ] && [ "$(nvm version default 2>/dev/null)" != "N/A" ]; then
-    nvm use default >/dev/null 2>&1
-    npm ls -g --depth=0 '{{ . }}' >/dev/null 2>&1 || pending "npm {{ . }}" "npm install -g {{ . }}" "install_npm {{ . }}"
+if ! command -v mise >/dev/null 2>&1; then
+    pending "mise tools (node, python, npm and PyPI tools)" "$FORMULA_HINT" "missing_tool mise"
 else
-    pending "npm {{ . }}" "needs node first" "missing_tool node"
+    # Runtimes first (no ":" in the name), then the npm/pypi tools that run on them.
+    while IFS= read -r tool; do
+        [ -n "$tool" ] && pending "$tool" "mise install $tool" "mise_install $tool"
+    done < <(mise ls --missing -J 2>/dev/null | /usr/bin/python3 -c '
+import json, sys
+tools = list(json.load(sys.stdin))
+print("\n".join([t for t in tools if ":" not in t] + [t for t in tools if ":" in t]))' 2>/dev/null)
 fi
-{{- end }}
 
-if ! command -v pyenv >/dev/null 2>&1; then
-    pending "python $PYTHON" "$FORMULA_HINT" "missing_tool pyenv"
-elif ! pyenv latest "$PYTHON" >/dev/null 2>&1 || [[ "$(pyenv global 2>/dev/null)" != "$PYTHON"* ]]; then
-    pending "python $PYTHON" "pyenv install $PYTHON" "install_python"
-fi
-
-{{- range .runtimes.pipx }}
-if ! command -v pipx >/dev/null 2>&1; then
-    pending "pipx {{ . }}" "$FORMULA_HINT" "missing_tool pipx"
-elif ! pipx list --short 2>/dev/null | grep -q '^{{ . }} '; then
-    pending "pipx {{ . }}" "pipx install {{ . }}" "install_pipx {{ . }}"
-fi
-{{- end }}
-
-{{- range $uv }}
-if ! command -v uv >/dev/null 2>&1; then
-    pending "uv {{ . }}" "$FORMULA_HINT" "missing_tool uv"
-elif ! uv tool list 2>/dev/null | grep -q '^{{ . }} '; then
-    pending "uv {{ . }}" "uv tool install {{ . }}" "install_uv {{ . }}"
-fi
-{{- end }}
-{{- range $uvGit }}
+{{- range $git }}
 if ! command -v uv >/dev/null 2>&1; then
     pending "uv {{ .name }}" "$FORMULA_HINT" "missing_tool uv"
 elif ! uv tool list 2>/dev/null | grep -q '^{{ .name }} '; then
-    pending "uv {{ .name }} (private repo)" "needs the 1Password ssh agent unlocked: uv tool install {{ .url }}" "install_uv {{ .url }}"
+    pending "uv {{ .name }} (private repo)" "needs the 1Password ssh agent unlocked: uv tool install {{ .url }}" "uv_install {{ .url }}"
 fi
 {{- end }}
 

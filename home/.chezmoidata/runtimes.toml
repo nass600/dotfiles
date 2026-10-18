@@ -2,28 +2,31 @@
 # the runtimes script re-runs whenever its rendered content changes.
 
 [runtimes]
-    node = "lts/*"
+    # node and python are installed by mise (~/.config/mise/config.toml is rendered from this
+    # file). "lts" follows the current Node LTS line; "3.14" the latest 3.14.x.
+    node = "lts"
     python = "3.14"
-    npm_globals = ["vobsub-to-srt"]
-    pipx = ["poetry"]
-    uv_tools = ["graphifyy"]
-    # Private repos: need the 1Password ssh agent unlocked. `name` is the installed tool, used to
-    # tell whether it is already there.
-    uv_tools_git = [
+    # Global tools from npm and PyPI, also through mise, each in its own environment.
+    npm = ["vobsub-to-srt"]
+    python_tools = ["poetry", "graphifyy"]
+    # Private repos: mise cannot list a private repo's versions without a GitHub token, so uv
+    # installs these over the 1Password ssh agent. `name` is the installed tool, used to tell
+    # whether it is already there.
+    python_tools_git = [
         { name = "doubtfire", url = "git+ssh://git@github.com/nass600/doubtfire" },
         { name = "parker", url = "git+ssh://git@github.com/nass600/parker-cli" },
     ]
 
 # Added on top of the shared lists on one machine only.
 [runtimes.personal]
-    npm_globals = []
-    uv_tools = []
-    uv_tools_git = []
+    npm = []
+    python_tools = []
+    python_tools_git = []
 
 [runtimes.work]
-    npm_globals = []
-    uv_tools = []
-    uv_tools_git = []
+    npm = []
+    python_tools = []
+    python_tools_git = []
 
 [editor]
     # Cursor installs from the Open VSX registry: only extensions published there can be listed.

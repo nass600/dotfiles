@@ -1,0 +1,15 @@
+{{- $m := index .runtimes .machine -}}
+# Managed by chezmoi from .chezmoidata/runtimes.toml: edit that file, then `chezmoi apply`.
+# mise installs everything here and exposes it through ~/.local/share/mise/shims.
+# Updates are deliberate: `mise upgrade`.
+
+[tools]
+node = {{ .runtimes.node | quote }}
+python = {{ .runtimes.python | quote }}
+{{- range concat .runtimes.npm $m.npm }}
+# allow_low_downloads: mise refuses niche npm packages by default; being in runtimes.toml is the vetting.
+"npm:{{ . }}" = { version = "latest", allow_low_downloads = true }
+{{- end }}
+{{- range concat .runtimes.python_tools $m.python_tools }}
+"pypi:{{ . }}" = "latest"
+{{- end }}
