@@ -1,8 +1,9 @@
 # Shared by every machine. Machine-specific packages live in Brewfile.<machine>.
 # `chezmoi apply` runs `brew bundle` on this file plus the matching one whenever either changes.
 
-tap "oven-sh/bun"
-tap "athevon/tokeneater"
+# `trusted: true`: Homebrew 7 refuses to load third-party taps until they are trusted.
+tap "oven-sh/bun", trusted: true
+tap "athevon/tokeneater", trusted: true
 
 # CLI tools
 brew "alass"
@@ -36,14 +37,15 @@ brew "postgresql@18", link: true # keg-only; keep psql on PATH
 brew "pyenv"
 brew "shellcheck"
 brew "tesseract-lang"
+brew "unar"                       # extracts rar archives; the rar cask is disabled upstream
 brew "uv"
 brew "wget"
 brew "zinit"
 
-# Casks
+# Casks. Not here on purpose: aegisub, makemkv and rar, disabled by Homebrew on 2026-09-01 because
+# their apps fail Gatekeeper. Install them by hand if needed (see README, "Left to do by hand").
 cask "1password"
 cask "1password-cli"
-cask "aegisub"
 cask "beekeeper-studio"
 cask "betterdisplay"
 cask "claude-code"
@@ -58,13 +60,11 @@ cask "ghostty"
 cask "google-chrome"
 cask "istat-menus"
 cask "logi-options+"
-cask "makemkv"
 cask "mkvtoolnix-app"
 cask "namechanger"
 cask "notion"
 cask "plex"
 cask "postman"
-cask "rar"
 cask "raycast"
 cask "sublime-text"
 cask "the-unarchiver"

@@ -1,0 +1,25 @@
+#!/bin/bash
+# Last step of every `chezmoi apply`: one list of everything the steps could not do this time,
+# each with its reason and what to do about it. Nothing waited for these; `chezmoi apply` retries them.
+
+{{ template "log.sh" "99-summary" }}
+
+echo ""
+echo "----------------------------------------------------------------"
+if [ ! -s "$FAIL_FILE" ]; then
+    echo "  Everything declared in the repo is in place."
+else
+    n=$(grep -c . "$FAIL_FILE")
+    echo "  $n item(s) could not be done this time. Nothing else waited for them;"
+    echo "  fix the cause where there is one and run \`chezmoi apply\`: only these are retried."
+    echo ""
+    while IFS=$'\t' read -r step item reason hint; do
+        printf '  %-22s %s\n' "$step" "$item"
+        [ -n "$reason" ] && printf '  %-22s   %s\n' "" "$(printf '%s' "$reason" | cut -c1-120)"
+        [ -n "$hint" ]   && printf '  %-22s   -> %s\n' "" "$hint"
+    done <"$FAIL_FILE"
+    echo ""
+    echo "  Full output of each step: $LOG_DIR/<step>.log"
+fi
+echo "----------------------------------------------------------------"
+exit 0

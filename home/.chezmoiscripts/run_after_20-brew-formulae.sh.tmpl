@@ -1,0 +1,27 @@
+#!/bin/bash
+# Installs the taps and formulae from packages/Brewfile plus packages/Brewfile.{{ .machine }}.
+# Runs on every `chezmoi apply`: `brew bundle check` says what is missing (a few seconds when
+# nothing is), and only that is installed, one entry at a time. A failure is reported and retried
+# next time; it never stops the apply. Casks and App Store apps have their own steps.
+
+{{ template "log.sh" "20-brew-formulae" }}
+{{ template "step.sh" }}
+
+SRC="{{ .chezmoi.workingTree }}/packages"
+BREWFILES=("$SRC/Brewfile" "$SRC/Brewfile.{{ .machine }}")
+
+{{ template "brew-step.sh" }}
+
+taps="$(mktemp)"
+plan="$(mktemp)"
+trap 'rm -f "$taps" "$plan"' EXIT
+
+brew_update_once
+
+# Taps first: formulae below may live in them. `trusted: true` in the Brewfile lets Homebrew load them.
+brew_plan "$taps" tap
+brew_install_plan "$taps" taps
+
+brew_plan "$plan" brew
+brew_install_plan "$plan" formulae
+exit 0

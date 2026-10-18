@@ -1,0 +1,6 @@
+#!/bin/bash
+# Runs first on every `chezmoi apply`: starts an empty failure list. Each step appends what it could
+# not do, and 99-summary prints the list at the end. Nothing in between stops the run.
+LOG_DIR="$HOME/Library/Logs/dotfiles"
+mkdir -p "$LOG_DIR"
+: >"$LOG_DIR/failures.tsv"

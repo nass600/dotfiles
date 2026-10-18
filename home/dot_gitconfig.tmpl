@@ -34,9 +34,8 @@
     lg3-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset) %C(bold cyan)(committed: %cD)%C(reset) %C(auto)%d%C(reset)%n''          %C(white)%s%C(reset)%n'
 [remote "origin"]
     fetch = +refs/pull/*/head:refs/remotes/origin/pr/*
-[credential "https://github.com"]
-    helper =
-    helper = !/opt/homebrew/bin/gh auth git-credential
-[credential "https://gist.github.com"]
-    helper =
-    helper = !/opt/homebrew/bin/gh auth git-credential
+# GitHub is reached over ssh only, through the 1Password ssh agent (~/.ssh/config). An https remote
+# pasted from the browser is rewritten to ssh, so git never needs a token or the GitHub CLI; `gh`
+# is signed in separately for releases and pull requests.
+[url "git@github.com:"]
+    insteadOf = https://github.com/

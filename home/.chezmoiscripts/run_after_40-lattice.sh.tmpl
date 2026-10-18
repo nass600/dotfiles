@@ -1,0 +1,56 @@
+#!/bin/bash
+# Builds Lattice {{ .lattice.version }} from {{ .lattice.repo }} and installs it in /Applications.
+# Runs on every `chezmoi apply` but only builds when the installed version (remembered in
+# ~/.local/state/dotfiles/lattice.version) differs from the one in .chezmoidata/runtimes.toml.
+#
+# Built locally on purpose: an app compiled on this Mac carries no quarantine flag, so it opens
+# without Gatekeeper prompts and needs no Apple Developer signature.
+
+{{ template "log.sh" "40-lattice" }}
+{{ template "step.sh" }}
+
+REPO="{{ .lattice.repo }}"
+VERSION="{{ .lattice.version }}"
+APP="/Applications/Lattice.app"
+MARK="$HOME/.local/state/dotfiles/lattice.version"
+
+if [ -d "$APP" ] && [ "$(cat "$MARK" 2>/dev/null)" = "$VERSION" ]; then
+    echo "Lattice $VERSION: in place."
+    exit 0
+fi
+
+# Runs in a subshell so set -e and the temp dir cleanup stay local to the build.
+build_lattice() (
+    set -euo pipefail
+    work="$(mktemp -d)"
+    trap 'rm -rf "$work"' EXIT
+    git -c advice.detachedHead=false clone --quiet --depth 1 --branch "$VERSION" "$REPO" "$work/src"
+    (cd "$work/src" && swift build -c release)
+    bundle="$work/Lattice.app"
+    mkdir -p "$bundle/Contents/MacOS"
+    cp "$work/src/Resources/Info.plist" "$bundle/Contents/Info.plist"
+    cp "$work/src/.build/release/Lattice" "$bundle/Contents/MacOS/Lattice"
+    codesign --force --sign - --entitlements "$work/src/Resources/Lattice.entitlements" "$bundle"
+    # Swap the running copy for the new one.
+    osascript -e 'quit app "Lattice"' >/dev/null 2>&1 || true
+    sleep 1
+    ditto "$bundle" "$APP"
+    mkdir -p "$(dirname "$MARK")"
+    echo "$VERSION" >"$MARK"
+    open -a "$APP" || true
+)
+
+echo "Lattice: building $VERSION (a few minutes; compiler output in $LOG)."
+step_total 1
+if ! command -v swift >/dev/null 2>&1; then
+    item_begin "Lattice $VERSION"
+    item_fail "swift not found" "xcode-select --install, then chezmoi apply"
+else
+    run_item "Lattice $VERSION" "see $LOG; retry with chezmoi apply" build_lattice
+fi
+step_done "Lattice"
+if [ "$STEP_FAILED" = 0 ]; then
+    echo "  A locally built app counts as new to macOS: enable it again under"
+    echo "  System Settings -> Privacy & Security -> Accessibility."
+fi
+exit 0

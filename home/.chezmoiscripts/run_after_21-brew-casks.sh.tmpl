@@ -1,0 +1,23 @@
+#!/bin/bash
+# Installs the casks (apps and fonts) from packages/Brewfile plus packages/Brewfile.{{ .machine }}.
+# Runs on every `chezmoi apply`: `brew bundle check` says what is missing (a few seconds when
+# nothing is), and only that is installed, one entry at a time. A failure, typically a download
+# host that is unreachable right now, is reported and retried next time; it never stops the apply.
+# An app already in /Applications but unknown to Homebrew is adopted when its version matches;
+# otherwise it shows as FAIL with Homebrew's message and `brew install --cask --force <app>`
+# hands it over.
+
+{{ template "log.sh" "21-brew-casks" }}
+{{ template "step.sh" }}
+
+SRC="{{ .chezmoi.workingTree }}/packages"
+BREWFILES=("$SRC/Brewfile" "$SRC/Brewfile.{{ .machine }}")
+
+{{ template "brew-step.sh" }}
+
+plan="$(mktemp)"
+trap 'rm -f "$plan"' EXIT
+
+brew_plan "$plan" cask
+brew_install_plan "$plan" casks
+exit 0

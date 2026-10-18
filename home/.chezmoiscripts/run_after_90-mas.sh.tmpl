@@ -1,0 +1,58 @@
+#!/bin/bash
+# Installs the App Store apps from packages/Brewfile plus packages/Brewfile.{{ .machine }}.
+# Runs on every `chezmoi apply` and never stops it: it can only succeed once you are signed in to
+# the App Store, which no script can do for you. Installed apps are found by store id through
+# Spotlight (`mas list` misses them on recent macOS). `mas install` runs sudo, so outside the
+# installer it asks for your password once.
+
+{{ template "log.sh" "90-mas" }}
+{{ template "step.sh" }}
+
+SRC="{{ .chezmoi.workingTree }}/packages"
+
+if ! command -v brew >/dev/null 2>&1 && [ -x /opt/homebrew/bin/brew ]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+# Homebrew breaks on every command when HOMEBREW_CURLRC names a missing file.
+if [ -n "${HOMEBREW_CURLRC:-}" ] && [ ! -f "$HOMEBREW_CURLRC" ]; then
+    unset HOMEBREW_CURLRC
+fi
+
+names=()
+ids=()
+while IFS= read -r line; do
+    names+=("$(printf '%s' "$line" | sed -E 's/^mas "([^"]+)".*/\1/')")
+    ids+=("$(printf '%s' "$line" | sed -E 's/.*id: *([0-9]+).*/\1/')")
+done < <(grep -h '^mas ' "$SRC/Brewfile" "$SRC/Brewfile.{{ .machine }}")
+
+if ! command -v mas >/dev/null 2>&1; then
+    step_total 1
+    item_begin "App Store apps (${#ids[@]})"
+    item_fail "mas is not installed" "comes from the Homebrew formulae step (20): fix that first"
+    exit 0
+fi
+
+installed() {
+    [ -n "$(mdfind "kMDItemAppStoreAdamID == $1" 2>/dev/null | head -1)" ] \
+        || mas list 2>/dev/null | grep -q "^$1 "
+}
+
+missing=()
+for i in "${!ids[@]}"; do
+    installed "${ids[$i]}" || missing+=("$i")
+done
+
+if [ ${#missing[@]} -eq 0 ]; then
+    echo "App Store: all ${#ids[@]} in place."
+    exit 0
+fi
+echo "App Store: ${#ids[@]} listed, ${#missing[@]} to install."
+
+install_app() { mas install "$1" || mas get "$1"; }
+
+step_total ${#missing[@]}
+for i in "${missing[@]}"; do
+    run_item "${names[$i]}" "sign in to the App Store (Apple ID), then chezmoi apply from a terminal so sudo can ask for your password" install_app "${ids[$i]}"
+done
+step_done "App Store"
+exit 0

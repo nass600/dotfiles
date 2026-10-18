@@ -7,10 +7,11 @@
     npm_globals = ["vobsub-to-srt"]
     pipx = ["poetry"]
     uv_tools = ["graphifyy"]
-    # Private repos: need the 1Password ssh agent unlocked.
+    # Private repos: need the 1Password ssh agent unlocked. `name` is the installed tool, used to
+    # tell whether it is already there.
     uv_tools_git = [
-        "git+ssh://git@github.com/nass600/doubtfire",
-        "git+ssh://git@github.com/nass600/parker-cli",
+        { name = "doubtfire", url = "git+ssh://git@github.com/nass600/doubtfire" },
+        { name = "parker", url = "git+ssh://git@github.com/nass600/parker-cli" },
     ]
 
 # Added on top of the shared lists on one machine only.
@@ -25,10 +26,13 @@
     uv_tools_git = []
 
 [editor]
+    # Cursor installs from the Open VSX registry: only extensions published there can be listed.
+    # Cursor's own replacements stand in for the Microsoft ones (cursorpyright for pyright and
+    # pylance, anysphere.remote-containers for ms-vscode-remote's); listing both makes the step
+    # "install" the alias on every apply.
     cursor_extensions = [
         "anthropic.claude-code",
         "anysphere.cursorpyright",
-        "anysphere.pyright",
         "anysphere.remote-containers",
         "anysphere.remote-ssh",
         "bierner.markdown-preview-github-styles",
@@ -45,17 +49,12 @@
         "graphql.vscode-graphql-syntax",
         "johnpapa.vscode-peacock",
         "kamikillerto.vscode-colorize",
-        "ldez.ignore-files",
-        "maptz.camelcasenavigation",
         "mhutchie.git-graph",
-        "michioxd.vscode-mui-material-icon-picker",
         "mikestead.dotenv",
         "ms-azuretools.vscode-docker",
         "ms-python.debugpy",
         "ms-python.isort",
         "ms-python.python",
-        "ms-python.vscode-pylance",
-        "ms-vscode-remote.remote-containers",
         "pkief.material-icon-theme",
         "prisma.prisma",
         "redhat.vscode-yaml",

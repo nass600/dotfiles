@@ -1,0 +1,54 @@
+#!/bin/bash
+# Cursor extensions from .chezmoidata/runtimes.toml. Runs on every `chezmoi apply`: one `cursor
+# --list-extensions` says what is missing, and only that is installed, one line per extension.
+# Cursor installs from the Open VSX registry, not Microsoft's marketplace: an extension that is not
+# published there fails with "not found" and must be installed by hand from its .vsix, or dropped.
+# Cursor has no account sync for extensions, so this list is what follows you between machines.
+
+{{ template "log.sh" "35-cursor-extensions" }}
+{{ template "step.sh" }}
+
+if ! command -v cursor >/dev/null 2>&1 && [ -x /opt/homebrew/bin/cursor ]; then
+    export PATH="/opt/homebrew/bin:$PATH"
+fi
+
+wanted=(
+{{- range .editor.cursor_extensions }}
+    '{{ . }}'
+{{- end }}
+)
+
+if ! command -v cursor >/dev/null 2>&1; then
+    echo "Cursor extensions: Cursor is not installed."
+    step_total 1
+    item_begin "Cursor extensions (${#wanted[@]})"
+    item_fail "the cursor command is missing" "comes from the Homebrew casks step (21): fix that first"
+    exit 0
+fi
+
+have="$(cursor --list-extensions 2>/dev/null | tr '[:upper:]' '[:lower:]')"
+missing=()
+for ext in "${wanted[@]}"; do
+    echo "$have" | grep -qx "$ext" || missing+=("$ext")
+done
+
+if [ ${#missing[@]} -eq 0 ]; then
+    echo "Cursor extensions: all ${#wanted[@]} in place."
+    exit 0
+fi
+echo "Cursor extensions: ${#wanted[@]} listed, ${#missing[@]} to install."
+
+# `cursor --install-extension` can exit 0 while reporting a failure, so read its output too.
+install_ext() {
+    local out rc=0
+    out="$(cursor --install-extension "$1" 2>&1)" || rc=$?
+    printf '%s\n' "$out"
+    [ "$rc" = 0 ] && ! grep -q 'Failed Installing' <<<"$out"
+}
+
+step_total ${#missing[@]}
+for ext in "${missing[@]}"; do
+    run_item "$ext" "not on Open VSX? install its .vsix by hand or drop it from runtimes.toml" install_ext "$ext"
+done
+step_done "Cursor extensions"
+exit 0
