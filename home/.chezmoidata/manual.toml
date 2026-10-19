@@ -5,7 +5,7 @@
     all = [
         "log out and back in once: scroll direction, Finder and Dock settings only apply at login",
         "grant permissions as apps ask: Raycast, BetterSnapTool, iStat Menus, Logi Options+, Docker Desktop",
-        "create your desktops in Mission Control and turn on Accessibility -> Display -> Reduce motion",
+        "create your desktops in Mission Control",
         "restore Claude Code memory into ~/.claude/projects (kept out of this public repo)",
         "sign in to AWS: aws configure sso (or restore ~/.aws)",
         "launch Docker Desktop once and accept its terms",
