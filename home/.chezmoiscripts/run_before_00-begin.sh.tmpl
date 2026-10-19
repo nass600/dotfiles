@@ -1,7 +1,17 @@
 #!/bin/bash
-# Runs first on every `chezmoi apply`: starts empty failure and manual-note lists. Each step appends
-# what it could not do or what only a human can do, and 99-summary prints both at the end.
+# Runs first on every `chezmoi apply`: starts empty failure and manual-note lists, and pins the
+# GitHub host key. Each step appends what it could not do or what only a human can do, and
+# 99-summary prints both at the end.
 LOG_DIR="$HOME/Library/Logs/dotfiles"
 mkdir -p "$LOG_DIR"
 : >"$LOG_DIR/failures.tsv"
 : >"$LOG_DIR/manual.tsv"
+
+# GitHub host key, pinned from https://api.github.com/meta. ~/.gitconfig sends every GitHub URL
+# over ssh, so this must be in place before the first step that clones from GitHub (the Homebrew
+# taps in 20). Without it ssh wants to ask "are you sure you want to continue connecting", and
+# under Homebrew, which runs git in its own process group, that question is never shown: the
+# apply just hangs.
+mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
+ssh-keygen -F github.com >/dev/null 2>&1 \
+    || echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" >>"$HOME/.ssh/known_hosts"

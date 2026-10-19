@@ -17,12 +17,6 @@ export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:$PATH"
 export MISE_YES=1
 FORMULA_HINT="comes from the Homebrew formulae step (20): fix that first"
 
-# GitHub host key, pinned from https://api.github.com/meta, so the private-repo installs below
-# never stop to ask "are you sure you want to continue connecting".
-mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
-ssh-keygen -F github.com >/dev/null 2>&1 \
-    || echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" >>"$HOME/.ssh/known_hosts"
-
 # --- installers (output goes to the log) ---
 missing_tool()  { echo "Error: $1 is not installed"; return 1; }
 mise_install()  { mise install "$1"; }
