@@ -1,6 +1,6 @@
 # Font
 font-family = MesloLGS Nerd Font Mono
-font-size = 14
+font-size = 12
 
 # Theme
 theme = dark:Monokai Pro,light:Monokai Pro Light
