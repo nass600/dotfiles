@@ -126,7 +126,7 @@ dotfiles
     ├── dot_config/                               ghostty, micro, lattice, homebrew (curl timeout), mise (rendered from runtimes.toml)
     ├── private_dot_ssh/                          ssh config and router public key, both from 1Password
     ├── private_dot_npmrc.tmpl                    npm token from 1Password
-    ├── private_dot_claude/                       Claude Code global instructions and settings
+    ├── private_dot_claude/                       Claude Code global instructions, settings and skills
     └── private_Library/                          Cursor and MKVToolNix settings
 ```
 
