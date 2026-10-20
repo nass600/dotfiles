@@ -13,6 +13,9 @@
 set -e
 
 REPO="nass600/dotfiles"
+# Where the repo is cloned: the jarvis group repo (~/Workspace/nass600/jarvis) holds the machine
+# repos, and chezmoi's source directory is this clone (sourceDir in .chezmoi.toml.tmpl).
+SRC="$HOME/Workspace/nass600/jarvis/dotfiles"
 OP_NPM_ITEM="op://Personal/GH_NPM_REGISTRY/credential"
 OP_NETWORK_ITEM="op://Private/Home network/notesPlain"
 OP_SSH_SOCK="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
@@ -265,12 +268,16 @@ fi
 # stop the apply; the summary step lists what failed. chezmoi itself only exits non-zero on Ctrl-C or
 # when a file cannot be written (a 1Password item missing, for instance).
 banner "3/6  Which machine, then 4/6 dotfiles and packages, 5/6 App Store"
-APPLY_RC=0
-if [ -n "${DOTFILES_BRANCH:-}" ]; then
-    chezmoi init --apply --branch "$DOTFILES_BRANCH" "$REPO" || APPLY_RC=$?
-else
-    chezmoi init --apply "$REPO" || APPLY_RC=$?
+# Clone over https: the 1Password ssh agent may not be ready yet, and the managed gitconfig
+# rewrites GitHub https remotes to ssh once it is applied.
+if [ ! -d "$SRC/.git" ]; then
+    mkdir -p "$(dirname "$SRC")"
+    git clone --quiet ${DOTFILES_BRANCH:+--branch "$DOTFILES_BRANCH"} "https://github.com/$REPO.git" "$SRC"
+elif [ -n "${DOTFILES_BRANCH:-}" ]; then
+    git -C "$SRC" checkout --quiet "$DOTFILES_BRANCH"
 fi
+APPLY_RC=0
+chezmoi init --apply --source "$SRC" || APPLY_RC=$?
 
 # --- GitHub CLI (optional) ---
 # Git never needs this: every GitHub remote goes over ssh through the 1Password agent. The `gh`

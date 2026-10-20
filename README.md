@@ -70,6 +70,8 @@ The run ends with this list, rendered from `home/.chezmoidata/manual.toml` plus 
 
 ## 🛠 Day to day
 
+The repo lives at `~/Workspace/nass600/jarvis/dotfiles`, inside the [jarvis](https://github.com/nass600/jarvis) group repo, and that clone is chezmoi's source directory.
+
 ```sh
 chezmoi cd                      # the home/ folder of this repo
 chezmoi edit ~/.zshrc           # edit a managed file

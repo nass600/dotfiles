@@ -4,6 +4,10 @@
 {{- /* CI has no 1Password: templates that read secrets are skipped there. */ -}}
 {{- $secrets := eq (env "CI") "" -}}
 
+{{- /* This repo is a member of the jarvis group repo and chezmoi's source directory is that clone,
+       not ~/.local/share/chezmoi. The installer clones it there before `chezmoi init --source`. */}}
+sourceDir = {{ joinPath .chezmoi.homeDir "Workspace/nass600/jarvis/dotfiles" | quote }}
+
 [data]
     name = "Ignacio Velazquez"
     email = "ivelazquez85@gmail.com"
