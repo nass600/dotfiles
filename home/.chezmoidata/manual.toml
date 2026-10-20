@@ -6,7 +6,6 @@
         "log out and back in once: scroll direction, Finder and Dock settings only apply at login",
         "grant permissions as apps ask: Raycast, BetterSnapTool, iStat Menus, Logi Options+, Docker Desktop",
         "create your desktops in Mission Control",
-        "restore Claude Code memory into ~/.claude/projects (kept out of this public repo)",
         "sign in to AWS: aws configure with the keys from the 1Password item \"AWS IAM (nass600)\", region eu-west-3; answer no to configuring AI agents (dotfiles owns those configs)",
         "launch Docker Desktop once and accept its terms",
         "apps Homebrew no longer ships because they are unsigned: Aegisub, MakeMKV, rar; download from their sites if needed",

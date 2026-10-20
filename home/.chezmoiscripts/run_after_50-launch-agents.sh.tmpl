@@ -1,0 +1,41 @@
+#!/bin/bash
+# Loads the launch agents this repo writes to ~/Library/LaunchAgents. Runs on every `chezmoi apply`
+# but only reloads an agent whose plist changed since it was last loaded (remembered in
+# ~/.local/state/dotfiles/launch-agents/<label>.sha).
+
+{{ template "log.sh" "50-launch-agents" }}
+{{ template "step.sh" }}
+
+AGENTS=(com.nass600.claude-backup)
+MARK_DIR="$HOME/.local/state/dotfiles/launch-agents"
+mkdir -p "$MARK_DIR"
+
+pending=()
+for label in "${AGENTS[@]}"; do
+    plist="$HOME/Library/LaunchAgents/$label.plist"
+    sha="$(shasum -a 256 "$plist" | cut -d' ' -f1)"
+    if [ "$(cat "$MARK_DIR/$label.sha" 2>/dev/null)" = "$sha" ] && launchctl print "gui/$(id -u)/$label" >/dev/null 2>&1; then
+        continue
+    fi
+    pending+=("$label")
+done
+
+if [ "${#pending[@]}" = 0 ]; then
+    echo "Launch agents: in place."
+    exit 0
+fi
+
+load_agent() {
+    local label="$1" plist="$HOME/Library/LaunchAgents/$1.plist"
+    launchctl bootout "gui/$(id -u)/$label" >/dev/null 2>&1 || true
+    launchctl bootstrap "gui/$(id -u)" "$plist"
+    shasum -a 256 "$plist" | cut -d' ' -f1 >"$MARK_DIR/$label.sha"
+}
+
+echo "Launch agents: loading ${#pending[@]}."
+step_total "${#pending[@]}"
+for label in "${pending[@]}"; do
+    run_item "$label" "launchctl bootstrap gui/\$(id -u) ~/Library/LaunchAgents/$label.plist" load_agent "$label"
+done
+step_done "Launch agents"
+exit 0

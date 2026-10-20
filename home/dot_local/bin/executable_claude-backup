@@ -1,0 +1,58 @@
+#!/bin/bash
+# Back up Claude Code memory and transcripts (~/.claude/projects) to iCloud Drive, or restore them.
+#
+#   claude-backup            write Config/Claude/claude-memory-<host>-<stamp>.tgz, keep the last 4 for this host
+#   claude-backup --restore  extract the newest archive for this host when ~/.claude/projects is empty
+#   claude-backup --list     show the archives in iCloud
+#
+# iCloud is the one place these backups live: it is signed in during macOS setup, so it is there
+# before the NAS or 1Password on a fresh Mac, and both Macs see it. A launch agent installed by
+# dotfiles runs the backup daily; run it by hand right before wiping a Mac.
+set -euo pipefail
+
+SRC="$HOME/.claude/projects"
+DEST="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Config/Claude"
+HOST="$(scutil --get LocalHostName 2>/dev/null || hostname -s)"
+KEEP=4
+
+die() { printf 'claude-backup: %s\n' "$*" >&2; exit 1; }
+
+[ -d "$(dirname "$DEST")" ] || die "iCloud Drive is not available at $(dirname "$DEST"); sign in to iCloud first"
+
+newest() { ls -1t "$DEST"/claude-memory-"$HOST"-*.tgz 2>/dev/null | head -1; }
+
+case "${1:-}" in
+"")
+    [ -d "$SRC" ] || die "nothing to back up: $SRC does not exist"
+    mkdir -p "$DEST"
+    stamp="$(date '+%Y-%m-%dT%H%M')"
+    out="$DEST/claude-memory-$HOST-$stamp.tgz"
+    tmp="$(mktemp "${TMPDIR:-/tmp}/claude-memory.XXXXXX")"
+    trap 'rm -f "$tmp"' EXIT
+    # Build the archive outside iCloud and move it in whole, so sync never sees a half-written file.
+    tar czf "$tmp" -C "$HOME/.claude" projects
+    # Prune before the move: iCloud's file provider can hide a just-written file for a moment, and
+    # a listing that finds nothing must not fail the run. Keep $KEEP - 1 old archives plus this one.
+    # Other hosts' archives are theirs to prune.
+    { ls -1t "$DEST"/claude-memory-"$HOST"-*.tgz 2>/dev/null || true; } | tail -n +"$KEEP" | while read -r old; do rm -f "$old"; done
+    mv "$tmp" "$out"
+    trap - EXIT
+    printf 'claude-backup: %s (%s)\n' "$out" "$(du -h "$out" | cut -f1)"
+    ;;
+--restore)
+    if [ -d "$SRC" ] && [ -n "$(ls -A "$SRC" 2>/dev/null)" ]; then
+        die "$SRC is not empty; move it away first if you really want to restore over it"
+    fi
+    archive="$(newest)"
+    [ -n "$archive" ] || die "no archive for $HOST in $DEST (iCloud may still be downloading; try again later)"
+    mkdir -p "$HOME/.claude"
+    tar xzf "$archive" -C "$HOME/.claude"
+    printf 'claude-backup: restored %s\n' "$archive"
+    ;;
+--list)
+    ls -lh "$DEST"/claude-memory-*.tgz 2>/dev/null || echo "claude-backup: no archives in $DEST"
+    ;;
+*)
+    die "usage: claude-backup [--restore|--list]"
+    ;;
+esac
