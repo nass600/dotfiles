@@ -1,0 +1,68 @@
+#!/bin/bash
+# Sleep timers. macOS ships with the display off after 10 minutes and system sleep one minute
+# later, which kills anything long-running in a terminal (a Claude Code session, a build, a
+# transfer) as soon as you walk away. These turn the display off after 20 minutes and keep the Mac
+# awake for 1 h on battery and 2 h on the power adapter; closing the lid still sleeps at once.
+# Runs on every `chezmoi apply`: pmset needs sudo, so the step reads `pmset -g custom` first and
+# only asks for the password when a value differs (the installer already holds sudo for the whole
+# run). System Settings shows the display timer under Lock Screen but never the system one.
+#
+# Verified on macOS 27.0.1, 2026-10-28. Check with `pmset -g custom`; change by editing WANT.
+
+{{ template "log.sh" "11-power" }}
+{{ template "step.sh" }}
+
+# scheme key value: scheme b = battery (pmset -b), c = charger (pmset -c); values are minutes.
+WANT=(
+    "b displaysleep 20"
+    "c displaysleep 20"
+    "b sleep 60"
+    "c sleep 120"
+)
+
+# current SCHEME KEY: the value in force, from the matching section of `pmset -g custom`.
+# Empty when the Mac has no such power source (a desktop has no "Battery Power" section).
+current() {
+    local section
+    case "$1" in b) section="Battery Power:" ;; c) section="AC Power:" ;; esac
+    pmset -g custom 2>/dev/null | awk -v s="$section" -v k="$2" '
+        $0 == s { on = 1; next }
+        /^[^ ]/ { on = 0 }
+        on && $1 == k { print $2; exit }'
+}
+
+scheme_name() { case "$1" in b) echo "battery" ;; c) echo "power adapter" ;; esac; }
+
+pending=()
+for spec in "${WANT[@]}"; do
+    read -r scheme key value <<<"$spec"
+    have="$(current "$scheme" "$key")"
+    [ -z "$have" ] && continue
+    [ "$have" = "$value" ] || pending+=("$spec $have")
+done
+
+if [ "${#pending[@]}" = 0 ]; then
+    echo "Power: sleep timers in place."
+    exit 0
+fi
+
+echo "Power: ${#pending[@]} sleep timer(s) to set."
+hint="run chezmoi apply from a terminal so sudo can ask for your password"
+
+# Ask for the password once, on its own line, instead of in the middle of a progress line.
+if ! sudo -n true 2>/dev/null; then
+    if [ -t 0 ]; then
+        echo "Setting them needs administrator access."
+        sudo -v || true
+    fi
+fi
+
+set_value() { sudo -n pmset -"$1" "$2" "$3"; }
+
+step_total "${#pending[@]}"
+for spec in "${pending[@]}"; do
+    read -r scheme key value have <<<"$spec"
+    run_item "$(scheme_name "$scheme") $key ${have} -> ${value} min" "$hint" set_value "$scheme" "$key" "$value"
+done
+step_done "Power"
+exit 0

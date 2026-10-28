@@ -8,6 +8,8 @@
 # Removed because they no longer work:
 #   com.apple.menuextra.clock DateFormat   -> replaced by the Show* keys below
 #   com.apple.loginwindow GuestEnabled     -> needs sudo on /Library/Preferences; guest is off by default
+#
+# Sleep timers (pmset) need sudo and live in 11-power, which checks them on every apply.
 
 {{ template "log.sh" "10-macos-defaults" }}
 

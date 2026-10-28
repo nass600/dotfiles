@@ -114,6 +114,7 @@ dotfiles
     ├── .chezmoiscripts/                          every step checks, installs what is missing, never stops the apply
     │   ├── run_before_00-begin.sh.tmpl           empties the failure list
     │   ├── run_once_after_10-macos-defaults.sh.tmpl
+    │   ├── run_after_11-power.sh.tmpl            sleep timers: display 20 min, Mac 1 h on battery, 2 h on the adapter (sudo)
     │   ├── run_after_20-brew-formulae.sh.tmpl    taps + CLI tools
     │   ├── run_after_21-brew-casks.sh.tmpl       apps and fonts
     │   ├── run_after_30-runtimes.sh.tmpl         mise install + the private uv tools
@@ -135,7 +136,7 @@ dotfiles
 
 Files use chezmoi's [naming](https://www.chezmoi.io/reference/source-state-attributes/): `dot_` → `.`, `private_` → owner-only, `.tmpl` → templated, `create_` → seeded once and then left to the app (Claude, Cursor, MKVToolNix rewrite their own settings). Scripts: `run_once_` runs once per machine, `run_` on every apply.
 
-Three tools own the state: chezmoi for files and secrets, Homebrew for packages and apps, [mise](https://mise.jdx.dev) for node, python and their global tools (`~/.config/mise/config.toml` is rendered from `runtimes.toml`). The scripts only cover what none of them does: Cursor extensions, Lattice, launch agents, Claude Code memory, App Store sign-in, and the two private PyPI tools that mise cannot see.
+Three tools own the state: chezmoi for files and secrets, Homebrew for packages and apps, [mise](https://mise.jdx.dev) for node, python and their global tools (`~/.config/mise/config.toml` is rendered from `runtimes.toml`). The scripts only cover what none of them does: sleep timers, Cursor extensions, Lattice, launch agents, Claude Code memory, App Store sign-in, and the two private PyPI tools that mise cannot see.
 
 Every step follows the same contract: find out what is missing (a few seconds when nothing is), install only that one item at a time with a `[n/N] name … ok 41s` line each, and record what failed instead of stopping. An item that needs another step's work, say a `uv` tool when the `uv` formula is absent, fails with a hint pointing at that step. The last step prints the whole list; `chezmoi apply` retries only what is still missing. Only Ctrl-C ends a run early.
 
