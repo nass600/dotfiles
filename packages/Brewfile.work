@@ -1,4 +1,10 @@
-# Work machine only.
+# The work bundle (apps = work). Generic tools for any employer; nothing here names one.
 
+tap "atlassian/acli"
+
+brew "acli"
+brew "k9s"
+
+cask "pritunl"
 cask "slack"
 cask "zoom"

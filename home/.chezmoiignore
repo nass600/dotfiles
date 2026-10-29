@@ -2,4 +2,11 @@
 {{ if not .secrets }}
 .npmrc
 .ssh/asus_router.pub
+.zshrc.local
+{{ end }}
+
+# Claude Code memory backup to iCloud Drive, only where the vault's dotfiles note asks for it.
+{{ if not .claude_backup }}
+.local/bin/claude-backup
+Library/LaunchAgents/com.nass600.claude-backup.plist
 {{ end }}

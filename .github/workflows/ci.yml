@@ -1,6 +1,6 @@
 name: CI
 
-# Smoke test: applies the repo into a scratch home for each machine type and checks that
+# Smoke test: applies the repo into a scratch home for each app bundle and checks that
 # templates render, scripts parse, Brewfiles load and no repo file leaks into $HOME.
 # It does not install packages or touch system settings.
 on:
@@ -13,17 +13,34 @@ permissions:
 
 jobs:
   verify:
-    name: Verify (${{ matrix.machine }})
+    name: Verify (${{ matrix.apps }})
     runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:
-        machine: [personal, work]
+        include:
+          - { apps: personal, profile: personal, claude_backup: "true" }
+          - { apps: work, profile: work, claude_backup: "false" }
+    env:
+      # No 1Password in CI: these stand in for the vault's dotfiles note (see .chezmoi.toml.tmpl).
+      DOTFILES_PROFILE: ${{ matrix.profile }}
+      DOTFILES_APPS: ${{ matrix.apps }}
+      DOTFILES_CLAUDE_BACKUP: ${{ matrix.claude_backup }}
     steps:
       - uses: actions/checkout@v6
 
       - name: Install chezmoi and shellcheck
         run: brew install chezmoi shellcheck
+
+      # Patterns that must never appear in this public repo (employer, hosts, addresses) live in a
+      # repository secret, one regex per line, so the list itself is not published either.
+      - name: No private patterns in the repo
+        if: ${{ env.FORBIDDEN_PATTERNS != '' }}
+        env:
+          FORBIDDEN_PATTERNS: ${{ secrets.FORBIDDEN_PATTERNS }}
+        run: |
+          hits="$(git grep -n -i -E -f <(printf '%s\n' "$FORBIDDEN_PATTERNS") -- . ':!.github/workflows/ci.yml' || true)"
+          if [ -n "$hits" ]; then echo "$hits" | sed -E 's/:.*$//' | sort -u | sed 's/^/::error::private pattern in /'; exit 1; fi
 
       - name: Lint static scripts
         run: |
@@ -41,7 +58,7 @@ jobs:
           home="$RUNNER_TEMP/home"; mkdir -p "$home"
           args=(--source "$PWD" --destination "$home" --config "$RUNNER_TEMP/chezmoi.toml" --persistent-state "$RUNNER_TEMP/state.boltdb")
           chezmoi init "${args[@]}" --config-path "$RUNNER_TEMP/chezmoi.toml" \
-            --promptChoice "Which machine is this=${{ matrix.machine }}"
+            --promptString "1Password vaults with a dotfiles item, comma separated=Private"
           chezmoi apply "${args[@]}" --exclude=scripts
 
           # Repo files must never land in $HOME.
@@ -55,10 +72,11 @@ jobs:
           done
           test "$(stat -f %Lp "$home/.ssh/config")" = 600
 
-          # Run scripts render and parse for this machine.
+          # Run scripts render and parse for this bundle.
           for t in home/.chezmoiscripts/run_*.tmpl; do
             out="$RUNNER_TEMP/$(basename "${t%.tmpl}")"
             chezmoi execute-template "${args[@]}" < "$t" > "$out"
+            [ -s "$out" ] || continue  # renders to nothing for this bundle, so chezmoi skips it
             bash -n "$out"
             shellcheck -S warning "$out"
           done

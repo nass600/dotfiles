@@ -12,12 +12,15 @@
     excludesfile = ~/.gitignore
 [web]
     browser = google-chrome
+[pager]
+    branch = false
 [pull]
     default = current
 [push]
     default = current
 [alias]
     kill = "!f(){ git branch -D \"$1\";  git push origin --delete \"$1\"; };f"
+    pr = "!f() { git fetch origin pull/$1/head:pr-$1 && git checkout pr-$1; }; f"
     co = checkout
     sw = switch
     br = branch

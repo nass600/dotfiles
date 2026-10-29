@@ -1,4 +1,4 @@
-# Shared by every machine. Machine-specific packages live in Brewfile.<machine>.
+# Shared by every machine. Bundle-specific packages live in Brewfile.<apps>, chosen by the vault's dotfiles note.
 # `chezmoi apply` runs `brew bundle` on this file plus the matching one whenever either changes.
 
 # `trusted: true`: Homebrew 7 refuses to load third-party taps until they are trusted.

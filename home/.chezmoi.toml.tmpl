@@ -1,8 +1,30 @@
-{{- /* Asked once per machine at `chezmoi init`; answers live in ~/.config/chezmoi/chezmoi.toml, never in git. */ -}}
-{{- $machine := promptChoiceOnce . "machine" "Which machine is this" (list "personal" "work") "personal" -}}
+{{- /* One question, asked once per machine at `chezmoi init`: the 1Password vaults that hold a "dotfiles"
+       item, in order. The answer lives in ~/.config/chezmoi/chezmoi.toml, never in git. Who this machine
+       is (profile, git email, app bundle, backup, prompt colour) comes from the LAST vault's note, so the
+       repo never names a vault or a company. See README, "Machines and vaults". */ -}}
+{{- $answer := promptStringOnce . "vaults" "1Password vaults with a dotfiles item, comma separated" "Private" -}}
+{{- $vaults := list -}}
+{{- range splitList "," $answer }}{{ if ne (trim .) "" }}{{ $vaults = append $vaults (trim .) }}{{ end }}{{ end -}}
+{{- $main := last $vaults -}}
 
-{{- /* CI has no 1Password: templates that read secrets are skipped there. */ -}}
+{{- /* CI has no 1Password: templates that read secrets are skipped there and the identity fields come
+       from the environment (DOTFILES_PROFILE, DOTFILES_EMAIL, DOTFILES_APPS, DOTFILES_CLAUDE_BACKUP,
+       DOTFILES_PROMPT_COLOR) so both app bundles can be rendered. */ -}}
 {{- $secrets := eq (env "CI") "" -}}
+{{- $profile := "" -}}{{- $email := "" -}}{{- $apps := "" -}}{{- $backup := "" -}}{{- $color := "" -}}
+{{- if $secrets -}}
+{{-   $profile = onepasswordRead (printf "op://%s/dotfiles/profile" $main) | trim -}}
+{{-   $email = onepasswordRead (printf "op://%s/dotfiles/email" $main) | trim -}}
+{{-   $apps = onepasswordRead (printf "op://%s/dotfiles/apps" $main) | trim -}}
+{{-   $backup = onepasswordRead (printf "op://%s/dotfiles/claude_backup" $main) | trim -}}
+{{-   $color = onepasswordRead (printf "op://%s/dotfiles/prompt_color" $main) | trim -}}
+{{- else -}}
+{{-   $profile = env "DOTFILES_PROFILE" | default "personal" -}}
+{{-   $email = env "DOTFILES_EMAIL" | default "ci@example.com" -}}
+{{-   $apps = env "DOTFILES_APPS" | default "personal" -}}
+{{-   $backup = env "DOTFILES_CLAUDE_BACKUP" | default "true" -}}
+{{-   $color = env "DOTFILES_PROMPT_COLOR" | default "34" -}}
+{{- end -}}
 
 {{- /* This repo is a member of the jarvis group repo and chezmoi's source directory is that clone,
        not ~/.local/share/chezmoi. The installer clones it there before `chezmoi init --source`. */}}
@@ -10,13 +32,23 @@ sourceDir = {{ joinPath .chezmoi.homeDir "Workspace/nass600/jarvis/dotfiles" | q
 
 [data]
     name = "Ignacio Velazquez"
-    email = "ivelazquez85@gmail.com"
     github_user = "nass600"
-    machine = {{ $machine | quote }}
+    # The answer, kept so init does not ask again, and the same split into a list for the templates.
+    vaults = {{ $answer | quote }}
+    vault_list = {{ $vaults | toJson }}
+    # From the last vault's dotfiles note.
+    profile = {{ $profile | quote }}
+    email = {{ $email | quote }}
+    apps = {{ $apps | quote }}
+    claude_backup = {{ eq (lower $backup) "true" }}
+    prompt_color = {{ $color | atoi }}
     secrets = {{ $secrets }}
 
+# The CLI is unlocked by the 1Password app (Settings > Developer > CLI integration), so chezmoi
+# must not run its own `op signin`, which has no app prompt and times out outside a terminal.
 [onepassword]
     command = "op"
+    prompt = false
 
 # Environment for every run script. Homebrew is tuned for an unattended install:
 #   - one explicit `brew update` in the formulae step instead of a hidden one per command

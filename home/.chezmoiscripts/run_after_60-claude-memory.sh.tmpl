@@ -1,3 +1,4 @@
+{{- if .claude_backup -}}
 #!/bin/bash
 # Restores Claude Code memory from the newest iCloud backup when ~/.claude/projects is empty, which
 # is only the case on a fresh Mac. Afterwards the launch agent from step 50 keeps the backup current.
@@ -17,3 +18,4 @@ step_total 1
 run_item "claude memory" "wait for iCloud Drive to finish downloading Config/Claude, then chezmoi apply or claude-backup --restore" "$HOME/.local/bin/claude-backup" --restore
 step_done "Claude Code memory"
 exit 0
+{{- end -}}

@@ -17,7 +17,7 @@ REPO="nass600/dotfiles"
 # repos, and chezmoi's source directory is this clone (sourceDir in .chezmoi.toml.tmpl).
 SRC="$HOME/Workspace/nass600/jarvis/dotfiles"
 OP_NPM_ITEM="op://Personal/GH_NPM_REGISTRY/credential"
-OP_NETWORK_ITEM="op://Private/Home network/notesPlain"
+OP_DOTFILES_ITEM="op://Private/dotfiles/profile"
 OP_SSH_SOCK="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
 LOG_DIR="$HOME/Library/Logs/dotfiles"
 
@@ -77,10 +77,10 @@ homebrew_env() {
 # a check fails, so the wait below can show it instead of a bare "not yet".
 op_token_ok()    { command -v op >/dev/null 2>&1 && op read "$OP_NPM_ITEM" >/dev/null 2>&1; }
 op_token_why()   { command -v op >/dev/null 2>&1 || { echo "op is not installed"; return; }; op read "$OP_NPM_ITEM" 2>&1 >/dev/null | tail -1; }
-op_network_ok()  { op read "$OP_NETWORK_ITEM" 2>/dev/null | grep -q "^Host "; }
-op_network_why() {
-    if out="$(op read "$OP_NETWORK_ITEM" 2>&1)"; then
-        echo "the item exists but contains no ssh \"Host\" lines"
+op_dotfiles_ok()  { op read "$OP_DOTFILES_ITEM" 2>/dev/null | grep -q .; }
+op_dotfiles_why() {
+    if out="$(op read "$OP_DOTFILES_ITEM" 2>&1)"; then
+        echo "the item exists but its profile field is empty"
     else
         echo "$out" | tail -1
     fi
@@ -148,7 +148,7 @@ run_check() {
     row "chezmoi"                            "$(is command -v chezmoi)"               "installed by this script"
     row "1Password app"                      "$(is test -d /Applications/1Password.app)" "installed by this script"
     row "1Password CLI can read secrets"     "$(is op_token_ok)"                      "Settings > Developer > Integrate with 1Password CLI; item $OP_NPM_ITEM"
-    row "Home network item in 1Password"     "$(is op_network_ok)"                    "Private vault secure note \"Home network\" holding the ssh Host blocks"
+    row "dotfiles item in 1Password"         "$(is op_dotfiles_ok)"                   "Private vault secure note \"dotfiles\" (profile, email, apps, claude_backup, prompt_color, ssh_config, zshrc)"
     row "1Password SSH agent has keys"       "$(is ssh_agent_ok)"                     "1Password > Settings > Developer > Use the SSH agent"
     row "GitHub reachable over SSH"          "$(is github_ssh_ok)"                    "needed for the private doubtfire and parker installs"
     row "GitHub CLI signed in"               "$(is gh auth status)"                   "optional, for releases and PRs: gh auth login --git-protocol ssh --skip-ssh-key --web -s workflow"
@@ -156,11 +156,11 @@ run_check() {
         pending="$(chezmoi status --exclude=scripts 2>/dev/null | wc -l | tr -d ' ')"
         row "Home directory matches the repo"  "$([ "$pending" = 0 ] && echo ok || echo fail)" "$pending pending change(s): run chezmoi diff"
         src="$(chezmoi source-path 2>/dev/null)/.."
-        machine="$(chezmoi data --format=json 2>/dev/null | sed -nE 's/.*"machine": *"([a-z]+)".*/\1/p' | head -1)"
-        if command -v brew >/dev/null 2>&1 && [ -f "$src/packages/Brewfile" ] && [ -n "$machine" ]; then
+        apps="$(chezmoi data --format=json 2>/dev/null | sed -nE 's/.*"apps": *"([a-z]+)".*/\1/p' | head -1)"
+        if command -v brew >/dev/null 2>&1 && [ -f "$src/packages/Brewfile" ] && [ -n "$apps" ]; then
             # Exit 0 means satisfied. Anything else is either a list of missing entries or a
             # Homebrew error, and an error must not pass as "nothing missing".
-            report="$(cat "$src/packages/Brewfile" "$src/packages/Brewfile.$machine" \
+            report="$(cat "$src/packages/Brewfile" "$src/packages/Brewfile.$apps" \
                 | HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --verbose --no-upgrade --file=- 2>&1)" && brew_rc=0 || brew_rc=$?
             missing="$(printf '%s\n' "$report" | grep -c '→' || true)"
             if [ "$brew_rc" = 0 ]; then
@@ -191,7 +191,7 @@ echo ""
 echo "What happens, and what it needs from you:"
 echo "  1. Administrator access      your macOS password, once"
 echo "  2. 1Password                 sign in, enable the CLI integration and the SSH agent (skipped when already done)"
-echo "  3. Which machine this is     personal or work"
+echo "  3. Which 1Password vaults    comma separated, default Private; the last one says who this Mac is"
 echo "  4. Dotfiles and packages     command-line tools, apps, runtimes (mise), Cursor extensions, Lattice; one line per item"
 echo "  5. App Store apps            only installs if the App Store is signed in; otherwise listed as pending"
 echo "  6. GitHub CLI                optional: sign in for releases and pull requests (git itself uses the 1Password ssh key)"
@@ -237,9 +237,9 @@ fi
 # On a re-run they are usually already true: then nothing is asked (the check itself triggers
 # the Touch ID prompt when 1Password wants one).
 banner "2/6  1Password"
-needs_you "Checking the 1Password CLI, the Home network item and the SSH agent."
+needs_you "Checking the 1Password CLI, the dotfiles item and the SSH agent."
 needs_you "If 1Password asks for Touch ID or your password now, approve it: that is the check talking to the app."
-if op_token_ok && op_network_ok && ssh_agent_ok; then
+if op_token_ok && op_dotfiles_ok && ssh_agent_ok; then
     printf '  %sok%s    Already set up. Nothing to do here.\n' "$C_GREEN" "$C_OFF"
 else
     open -a "1Password" 2>/dev/null || true
@@ -254,8 +254,9 @@ else
   Needs: 'Integrate with 1Password CLI' enabled, the authorisation prompt approved,
   and the item in the Personal vault with a field named 'credential'." op_token_why
 
-    wait_until op_network_ok "Waiting for the \"Home network\" item in the Private vault.
-  Needs: a secure note whose text is the ssh config Host blocks (gt500, router)." op_network_why
+    wait_until op_dotfiles_ok "Waiting for the \"dotfiles\" item in the Private vault.
+  Needs: a secure note with the fields profile, email, apps, claude_backup, prompt_color, ssh_config, zshrc
+  (see README, Machines and vaults). A work vault has one too; name it at the prompt that follows." op_dotfiles_why
 
     wait_until ssh_agent_ok "Waiting for the 1Password SSH agent.
   Needs: 'Use the SSH agent' enabled. Without it the private tools (doubtfire, parker) cannot be installed." ssh_agent_why optional \
@@ -263,11 +264,11 @@ else
 fi
 
 # --- Apply ---
-# Asks which machine this is, then applies the dotfiles and runs the steps in order: macOS defaults,
+# Asks which vaults this Mac uses, then applies the dotfiles and runs the steps in order: macOS defaults,
 # Homebrew formulae, casks, runtimes, Cursor extensions, Lattice, App Store apps, summary. Steps never
 # stop the apply; the summary step lists what failed. chezmoi itself only exits non-zero on Ctrl-C or
 # when a file cannot be written (a 1Password item missing, for instance).
-banner "3/6  Which machine, then 4/6 dotfiles and packages, 5/6 App Store"
+banner "3/6  Which vaults, then 4/6 dotfiles and packages, 5/6 App Store"
 # Clone over https: the 1Password ssh agent may not be ready yet, and the managed gitconfig
 # rewrites GitHub https remotes to ssh once it is applied.
 if [ ! -d "$SRC/.git" ]; then
