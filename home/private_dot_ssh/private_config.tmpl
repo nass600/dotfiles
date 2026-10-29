@@ -1,12 +1,10 @@
-{{- /* Each vault listed at init has a "dotfiles" note whose ssh_config field is pasted in as is, in
-       order, so the public repo never contains a host, address or user. To add or change a host, edit
-       that field and run `chezmoi apply`. CI has no 1Password and gets only the agent block. */ -}}
+{{- /* The ssh_config field of this Mac's vault's "dotfiles" note, pasted in as is, so the public repo
+       never contains a host, address or user. To add or change a host, edit that field and run
+       `chezmoi apply`. CI has no 1Password and gets only the agent block. */ -}}
 {{- if .secrets -}}
-{{- range .vault_list -}}
-# Hosts from the dotfiles note in the {{ . }} vault.
-{{ onepasswordRead (printf "op://%s/dotfiles/ssh_config" .) | trim }}
+# Hosts from the dotfiles note in the {{ .vault }} vault.
+{{ onepasswordRead (printf "op://%s/dotfiles/ssh_config" .vault) | trim }}
 
 {{ end -}}
-{{- end -}}
 Host *
 	IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"

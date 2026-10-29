@@ -4,7 +4,7 @@
 [![chezmoi](https://img.shields.io/badge/managed_with-chezmoi-blue?style=for-the-badge)](https://www.chezmoi.io)
 [![GitHub tag](https://img.shields.io/github/tag/nass600/dotfiles.svg?style=for-the-badge&logo=github)]()
 
-My macOS setup. **One command** takes a fresh MacBook to fully configured: dotfiles, apps, macOS settings, runtimes, editor extensions and secrets. Which Mac it is comes from 1Password: the setup asks one question, which vaults, and reads everything about the machine from a `dotfiles` note in them (see [Machines and vaults](#-machines-and-vaults)).
+My macOS setup. **One command** takes a fresh MacBook to fully configured: dotfiles, apps, macOS settings, runtimes, editor extensions and secrets. Which Mac it is comes from 1Password: the setup asks one question, which vault, and reads everything about the machine from a `dotfiles` note in it (see [Machines and vaults](#-machines-and-vaults)).
 
 ## 🚀 Fresh install
 
@@ -29,7 +29,7 @@ The run takes 30 to 60 minutes, most of it downloading, and prints what it is do
 
 1. **Administrator access**: password, once
 2. **1Password**: sign in, then enable **Integrate with 1Password CLI** and **Use the SSH agent** under *Settings → Developer*. The script re-checks every 5 seconds and moves on by itself; on a re-run where this already works, nothing is asked
-3. **Which 1Password vaults**: comma separated, default `Private`. The last one says who this Mac is: git email, app bundle, prompt colour, backups. Touch ID once right after, while the answer is read
+3. **Which 1Password vault**: picked from the vaults 1Password lists by typing its first letters, in lowercase. Its `dotfiles` note says who this Mac is: git email, app bundle, prompt colour, backups. Touch ID once right after, while the note is read
 4. **Dotfiles and packages**: one line per item, `[12/30] ffmpeg … ok 41s`, in this order: macOS defaults, command-line tools, apps, runtimes (mise), Cursor extensions, Lattice
 5. **App Store apps**: installed only if the App Store is signed in, otherwise listed as pending. Never blocks the rest. `mas` asks for your password when run outside the installer
 6. **GitHub CLI**, optional: sign in through the browser. Only the `gh` command needs it (releases, pull requests, CI). Git itself reaches GitHub over ssh through the 1Password agent, and https remotes are rewritten to ssh
@@ -88,14 +88,14 @@ brew bundle check --verbose --file=packages/Brewfile   # in a Brewfile but not i
 | 🧰 Node, Python, npm and PyPI tools (via mise), Cursor extensions, apps built from source | `home/.chezmoidata/runtimes.toml` |
 | 🏠 ssh hosts, shell extras, git email, prompt colour | The `dotfiles` secure note in the vault (fields below). Pasted into `~/.ssh/config`, `~/.zshrc.local`, `~/.gitconfig`, `~/.p10k.zsh.local` |
 | 🔐 GitHub access | ssh only, via the 1Password agent; `~/.gitconfig` rewrites https GitHub remotes to ssh |
-| 💻 Which vaults this Mac uses | `chezmoi init --prompt` |
+| 💻 Which vault this Mac belongs to | `chezmoi init --prompt` |
 
 > [!IMPORTANT]
 > If it is not in a file here, it is not part of the setup. Secrets, hosts, addresses, emails and employer names never are: they are read from 1Password when `chezmoi init` and `chezmoi apply` run.
 
 ## 🔐 Machines and vaults
 
-The repo is public and says nothing about where I work or what my networks look like. Each context, personal or an employer, is a **1Password vault** holding a secure note called **`dotfiles`** with the same fields everywhere. At `chezmoi init` the only question is which vaults this Mac uses, in order; the **last** one is the Mac's identity. `Private, Acme` is an Acme laptop that also knows the home network.
+The repo is public and says nothing about where I work or what my networks look like. Each context, personal or an employer, is a **1Password vault** holding a secure note called **`dotfiles`** with the same fields everywhere. At `chezmoi init` the only question is which vault this Mac belongs to, picked from the vaults 1Password lists: `Private` for a personal Mac, the employer's vault for a work one. Everything below comes from that vault's note.
 
 | Field | Value | What it drives |
 |---|---|---|
@@ -104,10 +104,10 @@ The repo is public and says nothing about where I work or what my networks look 
 | `apps` | `personal` or `work` | which `packages/Brewfile.<apps>`, `[runtimes.<apps>]` and `[manual.<apps>]` apply on top of the shared ones. Bundles are generic; a company never gets its own |
 | `claude_backup` | `true` / `false` | whether the Claude Code memory backup agent and its steps render |
 | `prompt_color` | 256-colour index | `P10K_COLOR_PRIMARY`, the accent that tells the Macs apart |
-| `ssh_config` | OpenSSH `Host` blocks, no `IdentityFile` | appended to `~/.ssh/config`, every vault in order |
-| `zshrc` | zsh exports and aliases | appended to `~/.zshrc.local`, every vault in order |
+| `ssh_config` | OpenSSH `Host` blocks, no `IdentityFile` | appended to `~/.ssh/config` |
+| `zshrc` | zsh exports and aliases | appended to `~/.zshrc.local` |
 
-SSH keys are **SSH Key** items in the same vault; `~/.config/1Password/ssh/agent.toml` lists the chosen vaults so the agent serves them. Every field exists in every note, empty allowed. A new employer is a new vault with a `dotfiles` note and its keys, then `chezmoi init` with the vault added to the answer: no change to this repo.
+SSH keys are **SSH Key** items in the same vault; `~/.config/1Password/ssh/agent.toml` names the chosen vault so the agent serves them. Every field exists in every note, empty allowed. A work Mac that should also reach home hosts gets them in the employer note's `ssh_config`. A new employer is a new vault with a `dotfiles` note and its keys, then `chezmoi init` picking that vault: no change to this repo.
 
 CI has no 1Password, so it renders both bundles from `DOTFILES_*` environment variables instead of a note. A repository secret, `FORBIDDEN_PATTERNS`, lists the words that must never appear here (one regex per line), and the build fails if any does.
 
@@ -122,7 +122,7 @@ dotfiles
 │   └── Brewfile.work
 ├── .chezmoiroot                                  tells chezmoi the dotfiles live in home/
 └── home/                                         mirrors $HOME
-    ├── .chezmoi.toml.tmpl                        init prompt: which vaults; identity from the vault's note; Homebrew env
+    ├── .chezmoi.toml.tmpl                        init prompt: which vault, from `op vault list`; identity from its note; Homebrew env
     ├── .chezmoidata/runtimes.toml                node, python, npm/PyPI tools, extensions, source builds
     ├── .chezmoidata/manual.toml                  the "left to do by hand" list, per app bundle
     ├── .chezmoitemplates/
@@ -142,11 +142,11 @@ dotfiles
     │   ├── run_after_60-claude-memory.sh.tmpl    restores Claude Code memory from iCloud on an empty Mac
     │   ├── run_after_90-mas.sh.tmpl              App Store apps
     │   └── run_after_99-summary.sh.tmpl          what could not be done, then what only you can do
-    ├── dot_zshrc · dot_zprofile · dot_p10k.zsh*  shell and prompt (+ dot_zshrc.local.tmpl from the vaults)
+    ├── dot_zshrc · dot_zprofile · dot_p10k.zsh*  shell and prompt (+ dot_zshrc.local.tmpl from the vault's note)
     ├── dot_gitconfig.tmpl · dot_gitignore        git
-    ├── dot_config/                               ghostty, micro, lattice, homebrew (curl timeout), mise (from runtimes.toml), 1Password ssh agent vaults
+    ├── dot_config/                               ghostty, micro, lattice, homebrew (curl timeout), mise (from runtimes.toml), 1Password ssh agent vault
     ├── dot_local/bin/claude-backup               Claude Code memory to iCloud Drive, and back
-    ├── private_dot_ssh/                          ssh config (hosts from every vault) and router public key, both from 1Password
+    ├── private_dot_ssh/                          ssh config (hosts from the vault's note) and router public key, both from 1Password
     ├── private_dot_npmrc.tmpl                    npm token from 1Password
     ├── private_dot_claude/                       Claude Code global instructions, settings and skills
     └── private_Library/                          Cursor and MKVToolNix settings, the claude-backup launch agent (claude_backup = true)

@@ -57,8 +57,7 @@ jobs:
         run: |
           home="$RUNNER_TEMP/home"; mkdir -p "$home"
           args=(--source "$PWD" --destination "$home" --config "$RUNNER_TEMP/chezmoi.toml" --persistent-state "$RUNNER_TEMP/state.boltdb")
-          chezmoi init "${args[@]}" --config-path "$RUNNER_TEMP/chezmoi.toml" \
-            --promptString "1Password vaults with a dotfiles item, comma separated=Private"
+          chezmoi init "${args[@]}" --config-path "$RUNNER_TEMP/chezmoi.toml"
           chezmoi apply "${args[@]}" --exclude=scripts
 
           # Repo files must never land in $HOME.

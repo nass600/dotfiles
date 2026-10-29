@@ -1,24 +1,33 @@
-{{- /* One question, asked once per machine at `chezmoi init`: the 1Password vaults that hold a "dotfiles"
-       item, in order. The answer lives in ~/.config/chezmoi/chezmoi.toml, never in git. Who this machine
-       is (profile, git email, app bundle, backup, prompt colour) comes from the LAST vault's note, so the
-       repo never names a vault or a company. See README, "Machines and vaults". */ -}}
-{{- $answer := promptStringOnce . "vaults" "1Password vaults with a dotfiles item, comma separated" "Private" -}}
-{{- $vaults := list -}}
-{{- range splitList "," $answer }}{{ if ne (trim .) "" }}{{ $vaults = append $vaults (trim .) }}{{ end }}{{ end -}}
-{{- $main := last $vaults -}}
+{{- /* One question, asked once per Mac at `chezmoi init`: which 1Password vault this Mac belongs to,
+       picked from the vaults 1Password lists so the name cannot be mistyped (type its first letters).
+       The answer lives in ~/.config/chezmoi/chezmoi.toml, never in git. The vault's "dotfiles" note
+       says who the Mac is (profile, git email, app bundle, backup, prompt colour), so the repo never
+       names a vault or a company. See README, "Machines and vaults". */ -}}
 
-{{- /* CI has no 1Password: templates that read secrets are skipped there and the identity fields come
-       from the environment (DOTFILES_PROFILE, DOTFILES_EMAIL, DOTFILES_APPS, DOTFILES_CLAUDE_BACKUP,
-       DOTFILES_PROMPT_COLOR) so both app bundles can be rendered. */ -}}
+{{- /* CI has no 1Password: templates that read secrets are skipped there and the vault and identity
+       fields come from the environment (DOTFILES_VAULT, DOTFILES_PROFILE, DOTFILES_EMAIL, DOTFILES_APPS,
+       DOTFILES_CLAUDE_BACKUP, DOTFILES_PROMPT_COLOR) so both app bundles can be rendered. */ -}}
 {{- $secrets := eq (env "CI") "" -}}
+{{- $vault := "" -}}
 {{- $profile := "" -}}{{- $email := "" -}}{{- $apps := "" -}}{{- $backup := "" -}}{{- $color := "" -}}
 {{- if $secrets -}}
-{{-   $profile = onepasswordRead (printf "op://%s/dotfiles/profile" $main) | trim -}}
-{{-   $email = onepasswordRead (printf "op://%s/dotfiles/email" $main) | trim -}}
-{{-   $apps = onepasswordRead (printf "op://%s/dotfiles/apps" $main) | trim -}}
-{{-   $backup = onepasswordRead (printf "op://%s/dotfiles/claude_backup" $main) | trim -}}
-{{-   $color = onepasswordRead (printf "op://%s/dotfiles/prompt_color" $main) | trim -}}
+{{- /* The choices come from `op vault list`, offered in lowercase so `p` picks Private (the prompt matches
+       typed letters exactly). A kept answer is reused; `chezmoi init --prompt` asks again. 1Password must
+       be unlocked with the CLI integration on, as the note reads below need anyway; the installer makes
+       sure of that before init. */ -}}
+{{-   if not (lookPath "op") }}{{ fail "the 1Password CLI (op) is not installed" }}{{ end -}}
+{{-   $byLower := dict -}}
+{{-   range (output "op" "vault" "list" "--format" "json" | fromJson) }}{{ $_ := set $byLower (lower .name) .name }}{{ end -}}
+{{-   $pick := promptChoiceOnce . "vault" "Which 1Password vault is this Mac" (keys $byLower | sortAlpha) | lower -}}
+{{-   $vault = index $byLower $pick | default "" -}}
+{{-   if not $vault }}{{ fail (printf "vault %q is not in 1Password any more: run chezmoi init --prompt" $pick) }}{{ end -}}
+{{-   $profile = onepasswordRead (printf "op://%s/dotfiles/profile" $vault) | trim -}}
+{{-   $email = onepasswordRead (printf "op://%s/dotfiles/email" $vault) | trim -}}
+{{-   $apps = onepasswordRead (printf "op://%s/dotfiles/apps" $vault) | trim -}}
+{{-   $backup = onepasswordRead (printf "op://%s/dotfiles/claude_backup" $vault) | trim -}}
+{{-   $color = onepasswordRead (printf "op://%s/dotfiles/prompt_color" $vault) | trim -}}
 {{- else -}}
+{{-   $vault = env "DOTFILES_VAULT" | default "Private" -}}
 {{-   $profile = env "DOTFILES_PROFILE" | default "personal" -}}
 {{-   $email = env "DOTFILES_EMAIL" | default "ci@example.com" -}}
 {{-   $apps = env "DOTFILES_APPS" | default "personal" -}}
@@ -33,10 +42,9 @@ sourceDir = {{ joinPath .chezmoi.homeDir "Workspace/nass600/jarvis/dotfiles" | q
 [data]
     name = "Ignacio Velazquez"
     github_user = "nass600"
-    # The answer, kept so init does not ask again, and the same split into a list for the templates.
-    vaults = {{ $answer | quote }}
-    vault_list = {{ $vaults | toJson }}
-    # From the last vault's dotfiles note.
+    # The answer, kept so init does not ask again.
+    vault = {{ $vault | quote }}
+    # From that vault's dotfiles note.
     profile = {{ $profile | quote }}
     email = {{ $email | quote }}
     apps = {{ $apps | quote }}

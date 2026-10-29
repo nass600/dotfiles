@@ -1,6 +1,3 @@
-{{- /* The zshrc field of each listed vault's dotfiles note, in order. Sourced by .zshrc; absent in CI. */ -}}
-{{- range .vault_list -}}
-# From the dotfiles note in the {{ . }} vault.
-{{ onepasswordRead (printf "op://%s/dotfiles/zshrc" .) | trim }}
-
-{{ end -}}
+{{- /* The zshrc field of this Mac's vault's dotfiles note. Sourced by .zshrc; absent in CI. */ -}}
+# From the dotfiles note in the {{ .vault }} vault.
+{{ onepasswordRead (printf "op://%s/dotfiles/zshrc" .vault) | trim }}

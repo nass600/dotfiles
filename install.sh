@@ -191,7 +191,7 @@ echo ""
 echo "What happens, and what it needs from you:"
 echo "  1. Administrator access      your macOS password, once"
 echo "  2. 1Password                 sign in, enable the CLI integration and the SSH agent (skipped when already done)"
-echo "  3. Which 1Password vaults    comma separated, default Private; the last one says who this Mac is"
+echo "  3. Which 1Password vault     pick it from the list; its dotfiles note says who this Mac is"
 echo "  4. Dotfiles and packages     command-line tools, apps, runtimes (mise), Cursor extensions, Lattice; one line per item"
 echo "  5. App Store apps            only installs if the App Store is signed in; otherwise listed as pending"
 echo "  6. GitHub CLI                optional: sign in for releases and pull requests (git itself uses the 1Password ssh key)"
@@ -256,7 +256,7 @@ else
 
     wait_until op_dotfiles_ok "Waiting for the \"dotfiles\" item in the Private vault.
   Needs: a secure note with the fields profile, email, apps, claude_backup, prompt_color, ssh_config, zshrc
-  (see README, Machines and vaults). A work vault has one too; name it at the prompt that follows." op_dotfiles_why
+  (see README, Machines and vaults). A work vault has one too; pick it at the prompt that follows." op_dotfiles_why
 
     wait_until ssh_agent_ok "Waiting for the 1Password SSH agent.
   Needs: 'Use the SSH agent' enabled. Without it the private tools (doubtfire, parker) cannot be installed." ssh_agent_why optional \
@@ -264,11 +264,11 @@ else
 fi
 
 # --- Apply ---
-# Asks which vaults this Mac uses, then applies the dotfiles and runs the steps in order: macOS defaults,
+# Asks which vault this Mac belongs to, then applies the dotfiles and runs the steps in order: macOS defaults,
 # Homebrew formulae, casks, runtimes, Cursor extensions, Lattice, App Store apps, summary. Steps never
 # stop the apply; the summary step lists what failed. chezmoi itself only exits non-zero on Ctrl-C or
 # when a file cannot be written (a 1Password item missing, for instance).
-banner "3/6  Which vaults, then 4/6 dotfiles and packages, 5/6 App Store"
+banner "3/6  Which vault, then 4/6 dotfiles and packages, 5/6 App Store"
 # Clone over https: the 1Password ssh agent may not be ready yet, and the managed gitconfig
 # rewrites GitHub https remotes to ssh once it is applied.
 if [ ! -d "$SRC/.git" ]; then
