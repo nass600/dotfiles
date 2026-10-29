@@ -1,3 +1,4 @@
+{{- if .claude_backup -}}
 #!/bin/bash
 # Loads the launch agents this repo writes to ~/Library/LaunchAgents. Runs on every `chezmoi apply`
 # but only reloads an agent whose plist changed since it was last loaded (remembered in
@@ -39,3 +40,4 @@ for label in "${pending[@]}"; do
 done
 step_done "Launch agents"
 exit 0
+{{- end -}}

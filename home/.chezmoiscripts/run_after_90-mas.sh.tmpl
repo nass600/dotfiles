@@ -1,5 +1,5 @@
 #!/bin/bash
-# Installs the App Store apps from packages/Brewfile plus packages/Brewfile.{{ .machine }}.
+# Installs the App Store apps from packages/Brewfile plus packages/Brewfile.{{ .apps }}.
 # Runs on every `chezmoi apply` and never stops it: it can only succeed once you are signed in to
 # the App Store, which no script can do for you. Installed apps are found by store id through
 # Spotlight (`mas list` misses them on recent macOS). `mas install` runs sudo, so outside the
@@ -23,7 +23,7 @@ ids=()
 while IFS= read -r line; do
     names+=("$(printf '%s' "$line" | sed -E 's/^mas "([^"]+)".*/\1/')")
     ids+=("$(printf '%s' "$line" | sed -E 's/.*id: *([0-9]+).*/\1/')")
-done < <(grep -h '^mas ' "$SRC/Brewfile" "$SRC/Brewfile.{{ .machine }}")
+done < <(grep -h '^mas ' "$SRC/Brewfile" "$SRC/Brewfile.{{ .apps }}")
 
 if ! command -v mas >/dev/null 2>&1; then
     step_total 1

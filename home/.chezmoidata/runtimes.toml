@@ -17,7 +17,7 @@
         { name = "parker", url = "git+ssh://git@github.com/nass600/parker-cli" },
     ]
 
-# Added on top of the shared lists on one machine only.
+# Added on top of the shared lists by one app bundle only (apps in the vault's dotfiles note).
 [runtimes.personal]
     npm = []
     python_tools = []
@@ -69,12 +69,6 @@
         "vunguyentuan.vscode-css-variables",
         "wholroyd.jinja",
     ]
-
-# Prompt accent per machine (256-colour codes) so the two MacBooks are told apart at a glance.
-[prompt.personal]
-    primary = 34
-[prompt.work]
-    primary = 33
 
 # Lattice: 2D grid navigation for macOS Spaces. Built from source because the fork carries
 # configurable hotkeys and overview settings that upstream does not have yet.

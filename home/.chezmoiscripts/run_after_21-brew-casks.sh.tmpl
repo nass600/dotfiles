@@ -1,5 +1,5 @@
 #!/bin/bash
-# Installs the casks (apps and fonts) from packages/Brewfile plus packages/Brewfile.{{ .machine }}.
+# Installs the casks (apps and fonts) from packages/Brewfile plus packages/Brewfile.{{ .apps }}.
 # Runs on every `chezmoi apply`: `brew bundle check` says what is missing (a few seconds when
 # nothing is), and only that is installed, one entry at a time. A failure, typically a download
 # host that is unreachable right now, is reported and retried next time; it never stops the apply.
@@ -11,7 +11,7 @@
 {{ template "step.sh" }}
 
 SRC="{{ .chezmoi.workingTree }}/packages"
-BREWFILES=("$SRC/Brewfile" "$SRC/Brewfile.{{ .machine }}")
+BREWFILES=("$SRC/Brewfile" "$SRC/Brewfile.{{ .apps }}")
 
 {{ template "brew-step.sh" }}
 

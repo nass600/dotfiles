@@ -4,7 +4,7 @@
 [![chezmoi](https://img.shields.io/badge/managed_with-chezmoi-blue?style=for-the-badge)](https://www.chezmoi.io)
 [![GitHub tag](https://img.shields.io/github/tag/nass600/dotfiles.svg?style=for-the-badge&logo=github)]()
 
-My macOS setup. **One command** takes a fresh MacBook to fully configured: dotfiles, apps, macOS settings, runtimes, editor extensions and secrets, for either of my two machines (`personal` / `work`).
+My macOS setup. **One command** takes a fresh MacBook to fully configured: dotfiles, apps, macOS settings, runtimes, editor extensions and secrets. Which Mac it is comes from 1Password: the setup asks one question, which vaults, and reads everything about the machine from a `dotfiles` note in them (see [Machines and vaults](#-machines-and-vaults)).
 
 ## 🚀 Fresh install
 
@@ -29,7 +29,7 @@ The run takes 30 to 60 minutes, most of it downloading, and prints what it is do
 
 1. **Administrator access**: password, once
 2. **1Password**: sign in, then enable **Integrate with 1Password CLI** and **Use the SSH agent** under *Settings → Developer*. The script re-checks every 5 seconds and moves on by itself; on a re-run where this already works, nothing is asked
-3. **Which machine this is**: `personal` or `work`
+3. **Which 1Password vaults**: comma separated, default `Private`. The last one says who this Mac is: git email, app bundle, prompt colour, backups. Touch ID once right after, while the answer is read
 4. **Dotfiles and packages**: one line per item, `[12/30] ffmpeg … ok 41s`, in this order: macOS defaults, command-line tools, apps, runtimes (mise), Cursor extensions, Lattice
 5. **App Store apps**: installed only if the App Store is signed in, otherwise listed as pending. Never blocks the rest. `mas` asks for your password when run outside the installer
 6. **GitHub CLI**, optional: sign in through the browser. Only the `gh` command needs it (releases, pull requests, CI). Git itself reaches GitHub over ssh through the 1Password agent, and https remotes are rewritten to ssh
@@ -44,7 +44,7 @@ The run takes 30 to 60 minutes, most of it downloading, and prints what it is do
 <summary>Other ways to run it</summary>
 
 ```sh
-# Check a machine without changing anything
+# Check a Mac without changing anything
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/nass600/dotfiles/main/install.sh)" -- --check
 
 # Try a branch
@@ -84,14 +84,32 @@ brew bundle check --verbose --file=packages/Brewfile   # in a Brewfile but not i
 
 | To change | Edit |
 |---|---|
-| 📦 Apps | `packages/Brewfile` (both machines), `Brewfile.personal` or `Brewfile.work` |
-| 🧰 Node, Python, npm and PyPI tools (via mise), Cursor extensions, prompt colour, apps built from source | `home/.chezmoidata/runtimes.toml` |
-| 🏠 Home network ssh hosts | The **Home network** secure note in 1Password. Its text is pasted into `~/.ssh/config` |
+| 📦 Apps | `packages/Brewfile` (every Mac), `Brewfile.personal` or `Brewfile.work` (the bundle named by `apps` in the vault's `dotfiles` note) |
+| 🧰 Node, Python, npm and PyPI tools (via mise), Cursor extensions, apps built from source | `home/.chezmoidata/runtimes.toml` |
+| 🏠 ssh hosts, shell extras, git email, prompt colour | The `dotfiles` secure note in the vault (fields below). Pasted into `~/.ssh/config`, `~/.zshrc.local`, `~/.gitconfig`, `~/.p10k.zsh.local` |
 | 🔐 GitHub access | ssh only, via the 1Password agent; `~/.gitconfig` rewrites https GitHub remotes to ssh |
-| 💻 Which machine this is | `chezmoi init --prompt` |
+| 💻 Which vaults this Mac uses | `chezmoi init --prompt` |
 
 > [!IMPORTANT]
-> If it is not in a file here, it is not part of the setup. Secrets and network details never are: they are read from 1Password when `chezmoi apply` runs.
+> If it is not in a file here, it is not part of the setup. Secrets, hosts, addresses, emails and employer names never are: they are read from 1Password when `chezmoi init` and `chezmoi apply` run.
+
+## 🔐 Machines and vaults
+
+The repo is public and says nothing about where I work or what my networks look like. Each context, personal or an employer, is a **1Password vault** holding a secure note called **`dotfiles`** with the same fields everywhere. At `chezmoi init` the only question is which vaults this Mac uses, in order; the **last** one is the Mac's identity. `Private, Acme` is an Acme laptop that also knows the home network.
+
+| Field | Value | What it drives |
+|---|---|---|
+| `profile` | one word, e.g. `personal` | the context's name, kept in `chezmoi data` |
+| `email` | address | `[user] email` in `~/.gitconfig` |
+| `apps` | `personal` or `work` | which `packages/Brewfile.<apps>`, `[runtimes.<apps>]` and `[manual.<apps>]` apply on top of the shared ones. Bundles are generic; a company never gets its own |
+| `claude_backup` | `true` / `false` | whether the Claude Code memory backup agent and its steps render |
+| `prompt_color` | 256-colour index | `P10K_COLOR_PRIMARY`, the accent that tells the Macs apart |
+| `ssh_config` | OpenSSH `Host` blocks, no `IdentityFile` | appended to `~/.ssh/config`, every vault in order |
+| `zshrc` | zsh exports and aliases | appended to `~/.zshrc.local`, every vault in order |
+
+SSH keys are **SSH Key** items in the same vault; `~/.config/1Password/ssh/agent.toml` lists the chosen vaults so the agent serves them. Every field exists in every note, empty allowed. A new employer is a new vault with a `dotfiles` note and its keys, then `chezmoi init` with the vault added to the answer: no change to this repo.
+
+CI has no 1Password, so it renders both bundles from `DOTFILES_*` environment variables instead of a note. A repository secret, `FORBIDDEN_PATTERNS`, lists the words that must never appear here (one regex per line), and the build fails if any does.
 
 ## 🗂 Layout
 
@@ -99,14 +117,14 @@ brew bundle check --verbose --file=packages/Brewfile   # in a Brewfile but not i
 dotfiles
 ├── install.sh                                    bootstrap for a fresh Mac (also --check)
 ├── packages/
-│   ├── Brewfile                                  apps and CLI tools, both machines
+│   ├── Brewfile                                  apps and CLI tools, every Mac
 │   ├── Brewfile.personal
 │   └── Brewfile.work
 ├── .chezmoiroot                                  tells chezmoi the dotfiles live in home/
 └── home/                                         mirrors $HOME
-    ├── .chezmoi.toml.tmpl                        init prompt: which machine; Homebrew env for the scripts
-    ├── .chezmoidata/runtimes.toml                node, python, npm/PyPI tools, extensions, prompt colours, source builds
-    ├── .chezmoidata/manual.toml                  the "left to do by hand" list, per machine
+    ├── .chezmoi.toml.tmpl                        init prompt: which vaults; identity from the vault's note; Homebrew env
+    ├── .chezmoidata/runtimes.toml                node, python, npm/PyPI tools, extensions, source builds
+    ├── .chezmoidata/manual.toml                  the "left to do by hand" list, per app bundle
     ├── .chezmoitemplates/
     │   ├── log.sh                                logging header shared by the scripts
     │   ├── step.sh                               [n/N] progress lines, failure list, shared by every step
@@ -123,14 +141,14 @@ dotfiles
     │   ├── run_after_60-claude-memory.sh.tmpl    restores Claude Code memory from iCloud on an empty Mac
     │   ├── run_after_90-mas.sh.tmpl              App Store apps
     │   └── run_after_99-summary.sh.tmpl          what could not be done, then what only you can do
-    ├── dot_zshrc · dot_zprofile · dot_p10k.zsh*  shell and prompt
+    ├── dot_zshrc · dot_zprofile · dot_p10k.zsh*  shell and prompt (+ dot_zshrc.local.tmpl from the vaults)
     ├── dot_gitconfig.tmpl · dot_gitignore        git
-    ├── dot_config/                               ghostty, micro, lattice, homebrew (curl timeout), mise (rendered from runtimes.toml)
+    ├── dot_config/                               ghostty, micro, lattice, homebrew (curl timeout), mise (from runtimes.toml), 1Password ssh agent vaults
     ├── dot_local/bin/claude-backup               Claude Code memory to iCloud Drive, and back
-    ├── private_dot_ssh/                          ssh config and router public key, both from 1Password
+    ├── private_dot_ssh/                          ssh config (hosts from every vault) and router public key, both from 1Password
     ├── private_dot_npmrc.tmpl                    npm token from 1Password
     ├── private_dot_claude/                       Claude Code global instructions, settings and skills
-    └── private_Library/                          Cursor and MKVToolNix settings, the claude-backup launch agent
+    └── private_Library/                          Cursor and MKVToolNix settings, the claude-backup launch agent (claude_backup = true)
 ```
 
 Files use chezmoi's [naming](https://www.chezmoi.io/reference/source-state-attributes/): `dot_` → `.`, `private_` → owner-only, `.tmpl` → templated, `create_` → seeded once and then left to the app (Claude, Cursor, MKVToolNix rewrite their own settings). Scripts: `run_once_` runs once per machine, `run_` on every apply.
@@ -139,7 +157,7 @@ Three tools own the state: chezmoi for files and secrets, Homebrew for packages 
 
 Every step follows the same contract: find out what is missing (a few seconds when nothing is), install only that one item at a time with a `[n/N] name … ok 41s` line each, and record what failed instead of stopping. An item that needs another step's work, say a `uv` tool when the `uv` formula is absent, fails with a hint pointing at that step. The last step prints the whole list; `chezmoi apply` retries only what is still missing. Only Ctrl-C ends a run early.
 
-CI applies the repo into a scratch home for each machine type and checks that templates render, scripts pass shellcheck and nothing leaks from the repo into `$HOME`. It does not install packages.
+CI applies the repo into a scratch home for each app bundle and checks that templates render, scripts pass shellcheck, nothing leaks from the repo into `$HOME` and no forbidden pattern is committed. It does not install packages.
 
 ## 📄 License
 

@@ -1,0 +1,8 @@
+# Vaults whose SSH keys the 1Password agent offers: the ones listed at `chezmoi init`. Without this
+# file only the built-in vaults are served; with it, only these. Changing it needs the agent toggled
+# off and on in 1Password > Settings > Developer.
+{{ range .vault_list -}}
+[[ssh-keys]]
+vault = {{ . | quote }}
+
+{{ end -}}

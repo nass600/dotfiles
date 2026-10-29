@@ -3,7 +3,7 @@
 # with its reason and what to do about it, then the things only a human can do (from
 # .chezmoidata/manual.toml plus notes the steps left). The manual list is also written to
 # ~/Library/Logs/dotfiles/manual.txt so the installer can repeat it as its very last words.
-{{- $m := index .manual .machine }}
+{{- $m := index .manual .apps }}
 
 {{ template "log.sh" "99-summary" }}
 

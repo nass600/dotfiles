@@ -4,7 +4,7 @@
 # the private PyPI tools over the 1Password ssh agent, because mise cannot list a private repo's
 # versions. Runs on every `chezmoi apply`: `mise ls --missing` and `uv tool list` say what is
 # missing (a few seconds), and only that is installed, one line per item.
-{{- $m := index .runtimes .machine }}
+{{- $m := index .runtimes .apps }}
 {{- $git := concat .runtimes.python_tools_git $m.python_tools_git }}
 
 {{ template "log.sh" "30-runtimes" }}

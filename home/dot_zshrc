@@ -47,7 +47,7 @@ zinit light joshjon/bliss-dircolors
 zinit ice depth=1
 zinit light romkatv/powerlevel10k
 [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh              # wizard-generated base config
-[[ -f ~/.p10k.zsh.local ]] && source ~/.p10k.zsh.local  # personal overrides (per-machine accent)
+[[ -f ~/.p10k.zsh.local ]] && source ~/.p10k.zsh.local  # per-machine accent and prompt layout
 
 # --- Completions ---
 # Tools such as the Sentry CLI install their completions here.
@@ -109,10 +109,10 @@ alias gpf="git pull origin main --rebase && git fetch --tags"
 # --- Homebrew drift ---
 # Lists what is installed but declared in neither Brewfile. Add it to a Brewfile or let it go.
 brewdrift() {
-    local src machine
+    local src apps
     src="$(chezmoi execute-template '{{ .chezmoi.workingTree }}')/packages" || return
-    machine="$(chezmoi execute-template '{{ .machine }}')" || return
-    cat "$src/Brewfile" "$src/Brewfile.$machine" | brew bundle cleanup --file=-
+    apps="$(chezmoi execute-template '{{ .apps }}')" || return
+    cat "$src/Brewfile" "$src/Brewfile.$apps" | brew bundle cleanup --file=-
 }
 
 # --- Zsh syntax highlighting theme ---
@@ -132,3 +132,7 @@ ZSH_HIGHLIGHT_STYLES[single-hyphen-option]='fg=226'
 ZSH_HIGHLIGHT_STYLES[double-hyphen-option]='fg=226'
 ZSH_HIGHLIGHT_STYLES[single-quoted-argument]='fg=46'
 ZSH_HIGHLIGHT_STYLES[double-quoted-argument]='fg=46'
+
+# --- Per-vault shell config ---
+# Rendered by chezmoi from the zshrc field of each vault's dotfiles note. Never in this repo.
+[[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
