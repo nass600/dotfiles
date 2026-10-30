@@ -52,17 +52,6 @@ defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
 # Keep desktops in a fixed order; Rook maps them onto a grid by position.
 defaults write com.apple.dock mru-spaces -bool false
 
-# --- Accessibility ---
-# Reduce motion: switching desktops (Rook does it constantly) crossfades instead of sliding
-# sideways, the quickest transition macOS offers. Verified on macOS 27.0.1, 2026-10-19: the flag
-# the system honours is ReduceMotionEnabled in com.apple.Accessibility, writable without Full
-# Disk Access, and the Dock restart below makes it take effect at once. The older
-# com.apple.universalaccess key only drives the switch in System Settings > Accessibility >
-# Motion; that domain is protected, so it is best effort: without Full Disk Access the switch
-# shows off while motion is in fact reduced.
-defaults write com.apple.Accessibility ReduceMotionEnabled -int 1
-defaults write com.apple.universalaccess reduceMotion -bool true 2>/dev/null || true
-
 # --- Workspace ---
 mkdir -p "$HOME/Workspace/nass600"
 
