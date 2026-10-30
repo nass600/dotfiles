@@ -192,7 +192,7 @@ echo "What happens, and what it needs from you:"
 echo "  1. Administrator access      your macOS password, once"
 echo "  2. 1Password                 sign in, enable the CLI integration and the SSH agent (skipped when already done)"
 echo "  3. Which 1Password vault     pick it from the list; its dotfiles note says who this Mac is"
-echo "  4. Dotfiles and packages     command-line tools, apps, runtimes (mise), Cursor extensions, Lattice; one line per item"
+echo "  4. Dotfiles and packages     command-line tools, apps, runtimes (mise), Cursor extensions; one line per item"
 echo "  5. App Store apps            only installs if the App Store is signed in; otherwise listed as pending"
 echo "  6. GitHub CLI                optional: sign in for releases and pull requests (git itself uses the 1Password ssh key)"
 echo ""
@@ -265,7 +265,7 @@ fi
 
 # --- Apply ---
 # Asks which vault this Mac belongs to, then applies the dotfiles and runs the steps in order: macOS defaults,
-# Homebrew formulae, casks, runtimes, Cursor extensions, Lattice, App Store apps, summary. Steps never
+# Homebrew formulae, casks, runtimes, Cursor extensions, App Store apps, summary. Steps never
 # stop the apply; the summary step lists what failed. chezmoi itself only exits non-zero on Ctrl-C or
 # when a file cannot be written (a 1Password item missing, for instance).
 banner "3/6  Which vault, then 4/6 dotfiles and packages, 5/6 App Store"

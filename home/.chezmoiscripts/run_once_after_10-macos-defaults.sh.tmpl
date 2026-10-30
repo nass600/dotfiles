@@ -49,11 +49,11 @@ defaults write com.apple.finder FXArrangeGroupViewBy -string "Name"
 defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
 
 # --- Mission Control ---
-# Keep desktops in a fixed order; Lattice maps them onto a grid by position.
+# Keep desktops in a fixed order; Rook maps them onto a grid by position.
 defaults write com.apple.dock mru-spaces -bool false
 
 # --- Accessibility ---
-# Reduce motion: switching desktops (Lattice does it constantly) crossfades instead of sliding
+# Reduce motion: switching desktops (Rook does it constantly) crossfades instead of sliding
 # sideways, the quickest transition macOS offers. Verified on macOS 27.0.1, 2026-10-19: the flag
 # the system honours is ReduceMotionEnabled in com.apple.Accessibility, writable without Full
 # Disk Access, and the Dock restart below makes it take effect at once. The older
