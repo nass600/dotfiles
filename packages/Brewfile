@@ -33,6 +33,7 @@ brew "mise"                       # node, python and their global tools (see run
 brew "mkvtoolnix"
 brew "openjdk"
 brew "postgresql@18", link: true # keg-only; keep psql on PATH
+brew "rsync"                      # doubtfire uploads; Apple's /usr/bin/rsync is openrsync, too old
 brew "shellcheck"
 brew "tesseract-lang"
 brew "unar"                       # extracts rar archives; the rar cask is disabled upstream
