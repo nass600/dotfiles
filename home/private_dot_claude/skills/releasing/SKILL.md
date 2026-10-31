@@ -23,18 +23,31 @@ release); this skill is *how*.
 5. **Read the outcome.** It is one of three:
    - *New release*: `gh release list --limit 1` shows a new tag. Continue.
    - *Green run, same tag*: the commits were `chore`, `docs`, `ci` or similar and semantic-release
-     correctly cut nothing. Say so and stop after step 6.
+     correctly cut nothing. Say so, skip step 7, and continue.
    - *Failed run*: `gh run view --log-failed`, report the cause, `git fetch origin` so the refs
      match, and stop. Do not push again or re-run the workflow to see if it passes; release
-     failures are state (token, lockfile, commit) and a retry reproduces them.
-6. **Sync the checkout:** `git pull --rebase origin main && git fetch --tags origin`, then
-   `git branch --merged main | grep -vE '^\*|^\s*main$' | xargs -n1 git branch -d`, and
-   `git fetch origin` if any push or pull used a URL instead of the remote name.
+     failures are state (token, lockfile, commit) and a retry reproduces them. Worktrees stay,
+     because the fix may need them.
+6. **Sync the checkout:** from the main checkout, never a worktree,
+   `git pull --rebase origin main && git fetch --tags origin`, and `git fetch origin` if any push
+   or pull used a URL instead of the remote name.
 7. **Run the repo's post-release step** from its `Releasing` section (reinstall a tool, rebuild an
-   artifact) and verify the installed version by the path that section names.
-8. **Report:** version before → after, the release URL, and any repo that pins this package.
-   The group repo's `AGENTS.md` (the parent folder) says who pins what. Bumping those is a
-   separate release that needs its own go.
+   artifact) in the main checkout, and verify the installed version by the path that section
+   names. A repo whose `Releasing` section names no such step skips this.
+8. **Tear down finished worktrees:** each holds a full `.venv` or `node_modules`, so none may
+   outlive its branch. This covers every linked worktree of the repo, whichever release finished
+   it. Run the script, then delete the merged branches it left:
+   ```bash
+   bash ~/.claude/skills/releasing/scripts/teardown-worktrees.sh
+   git branch --merged main | grep -vE '^[*+]|^\s*main$' | xargs -n1 git branch -d
+   ```
+   The script removes a worktree and its branch only when everything in it is safe on `main`, and
+   copies ignored plans and notes missing from the main checkout first. For each `kept` line it
+   prints, leave that worktree in place and put the line in the report: what to do with it is the
+   user's call.
+9. **Report:** version before → after, the release URL, any worktree the script kept, and any repo
+   that pins this package. The group repo's `AGENTS.md` (the parent folder) says who pins what.
+   Bumping those is a separate release that needs its own go.
 
 ## Common mistakes
 
@@ -44,4 +57,7 @@ release); this skill is *how*.
 | Calling it done because the run is green | Green means the workflow passed, not that a release exists. Compare tags |
 | Re-running a failed release | Diagnose from the failed log first; a retry reproduces the same state |
 | Bumping `package.json` or `pyproject.toml` | Never; the release commit does it and a manual bump breaks the pipeline |
+| Installing or building from a worktree | Install from the main checkout after the sync, so the tool matches the release |
+| Running `git worktree remove` by hand | It deletes ignored plans and `.env` silently, and "merged" can mean a branch with no commits and all its work uncommitted. Use the script |
+| Using `--force` on a worktree the script kept | The script kept it because something there is not on `main`. Report it and ask |
 | Deploying because a release happened | Deploy is its own step (jameson, tivan) and needs its own go |
