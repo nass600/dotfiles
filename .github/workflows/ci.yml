@@ -2,7 +2,8 @@ name: CI
 
 # Smoke test: applies the repo into a scratch home for each app bundle and checks that
 # templates render, scripts parse, Brewfiles load and no repo file leaks into $HOME.
-# It does not install packages or touch system settings.
+# It does not install packages or touch system settings. On main, a release follows when the
+# commits call for one.
 on:
   push:
     branches: [main]
@@ -61,7 +62,7 @@ jobs:
           chezmoi apply "${args[@]}" --exclude=scripts
 
           # Repo files must never land in $HOME.
-          for f in README.md LICENSE install.sh packages .chezmoiroot .chezmoiscripts; do
+          for f in README.md AGENTS.md LICENSE install.sh packages .chezmoiroot .chezmoiscripts .releaserc.json; do
             if [ -e "$home/$f" ]; then echo "::error::$f leaked into the home directory"; exit 1; fi
           done
 
@@ -79,3 +80,26 @@ jobs:
             bash -n "$out"
             shellcheck -S warning "$out"
           done
+
+  release:
+    name: Release
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx --yes semantic-release@25
