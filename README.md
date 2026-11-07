@@ -107,7 +107,7 @@ The repo is public and says nothing about where I work or what my networks look 
 | `ssh_config` | OpenSSH `Host` blocks, no `IdentityFile` | appended to `~/.ssh/config` |
 | `zshrc` | zsh exports and aliases | appended to `~/.zshrc.local` |
 
-SSH keys are **SSH Key** items in the same vault; `~/.config/1Password/ssh/agent.toml` names the chosen vault so the agent serves them. Every field exists in every note, empty allowed. A work Mac that should also reach home hosts gets them in the employer note's `ssh_config`. A new employer is a new vault with a `dotfiles` note and its keys, then `chezmoi init` picking that vault: no change to this repo.
+SSH keys are **SSH Key** items in the same vault; `~/.config/1Password/ssh/agent.toml` names the chosen vault so the agent serves them, and always `Private` too, since that vault is me on every Mac (GitHub, home router, NAS) and its keys are never duplicated into an employer's vault. Every field exists in every note, empty allowed. A work Mac that should also reach home hosts gets them in the employer note's `ssh_config`. A new employer is a new vault with a `dotfiles` note and its keys, then `chezmoi init` picking that vault: no change to this repo.
 
 CI has no 1Password, so it renders both bundles from `DOTFILES_*` environment variables instead of a note. A repository secret, `FORBIDDEN_PATTERNS`, lists the words that must never appear here (one regex per line), and the build fails if any does.
 
