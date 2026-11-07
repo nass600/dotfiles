@@ -42,11 +42,17 @@ release); this skill is *how*.
    git branch --merged main | grep -vE '^[*+]|^\s*main$' | xargs -n1 git branch -d
    ```
    The script removes a worktree and its branch only when everything in it is safe on `main`, and
-   copies ignored plans and notes missing from the main checkout first. For each `kept` line it
-   prints, leave that worktree in place and put the line in the report: what to do with it is the
-   user's call.
-9. **Report:** version before → after, the release URL, any worktree the script kept, and any repo
-   that pins this package. The group repo's `AGENTS.md` (the parent folder) says who pins what.
+   copies ignored plans and notes missing from the main checkout first. Files a tool rewrites on
+   every run (`sst-env.d.ts`, anything marked `linguist-generated` in `.gitattributes`) never
+   count as unsaved. **A `kept` line is a question to ask now, not a note for the report.** The
+   release succeeded and the checkout is back on `main`, so no worktree should outlive this step
+   without the user deciding: show the exact files the script named and ask whether to remove the
+   worktree anyway (its branch is on `main`; only those files go) or keep it. On "remove", run
+   `git worktree remove --force <path> && git branch -D <branch>`. On "keep", say so in the report.
+   Never leave a kept worktree behind silently; a forgotten sibling directory is the failure this
+   step exists to prevent.
+9. **Report:** version before → after, the release URL, any worktree the user chose to keep, and
+   any repo that pins this package. The group repo's `AGENTS.md` (the parent folder) says who pins what.
    Bumping those is a separate release that needs its own go.
 
 ## Common mistakes
@@ -59,5 +65,6 @@ release); this skill is *how*.
 | Bumping `package.json` or `pyproject.toml` | Never; the release commit does it and a manual bump breaks the pipeline |
 | Installing or building from a worktree | Install from the main checkout after the sync, so the tool matches the release |
 | Running `git worktree remove` by hand | It deletes ignored plans and `.env` silently, and "merged" can mean a branch with no commits and all its work uncommitted. Use the script |
-| Using `--force` on a worktree the script kept | The script kept it because something there is not on `main`. Report it and ask |
+| Using `--force` on a worktree the script kept without asking | The script kept it because something there is not on `main`. Name the files and ask; force only on the user's "remove" |
+| Leaving a kept worktree for "later" | Later never comes: the sibling directory sits there for days. Ask in the same turn, while the release is fresh |
 | Deploying because a release happened | Deploy is its own step (jameson, tivan) and needs its own go |

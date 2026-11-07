@@ -23,6 +23,15 @@ note_files() {
   } | while IFS= read -r path; do printf '%s\n' "${path#"$wt/"}"; done
 }
 
+# Files a tool rewrites on every run (SST's type stubs, anything the repo marks
+# `linguist-generated` in .gitattributes). A change there is never unsaved work.
+generated_file() {
+  local wt=$1 file=$2 attr
+  case "$file" in sst-env.d.ts|*/sst-env.d.ts) return 0 ;; esac
+  attr=$(git -C "$wt" check-attr linguist-generated -- "$file" | awk -F': ' '{print $NF}')
+  [ "$attr" = set ] || [ "$attr" = true ]
+}
+
 # Files holding something main does not have. Empty output means safe to remove.
 unsaved_files() {
   local wt=$1 file blob
@@ -30,6 +39,7 @@ unsaved_files() {
     git -C "$wt" -c core.quotePath=false diff --name-only HEAD
     git -C "$wt" -c core.quotePath=false ls-files --others --exclude-standard
   } | while IFS= read -r file; do
+    generated_file "$wt" "$file" && continue
     # A blob anywhere in main's history means the edit landed, even if main moved on.
     if [ ! -f "$wt/$file" ]; then
       printf '%s\n' "$file"
