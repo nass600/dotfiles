@@ -52,6 +52,11 @@ sourceDir = {{ joinPath .chezmoi.homeDir "Workspace/nass600/jarvis/dotfiles" | q
     prompt_color = {{ $color | atoi }}
     secrets = {{ $secrets }}
 
+# The run_ scripts run on every apply, so `chezmoi diff` would print all of them in full each time.
+# This only hides them from the diff; `chezmoi apply` still runs them.
+[diff]
+    exclude = ["scripts"]
+
 # The CLI is unlocked by the 1Password app (Settings > Developer > CLI integration), so chezmoi
 # must not run its own `op signin`, which has no app prompt and times out outside a terminal.
 [onepassword]
