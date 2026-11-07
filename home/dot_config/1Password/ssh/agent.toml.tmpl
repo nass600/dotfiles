@@ -1,5 +1,10 @@
-# The vault whose SSH keys the 1Password agent offers: the one chosen at `chezmoi init`. Without this
-# file only the built-in vaults are served; with it, only this one. Changing it needs the agent toggled
+# Vaults whose SSH keys the 1Password agent offers. Without this file only the built-in vaults are
+# served; with it, only these. Private is me on every Mac (GitHub, home router, NAS), so it is always
+# served; the vault chosen at `chezmoi init` adds this Mac's keys. Changing it needs the agent toggled
 # off and on in 1Password > Settings > Developer.
 [[ssh-keys]]
+vault = "Private"
+{{ if ne .vault "Private" }}
+[[ssh-keys]]
 vault = {{ .vault | quote }}
+{{ end -}}
