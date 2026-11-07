@@ -1,3 +1,9 @@
+# Docker Desktop writes this block when it finds it missing; its marker lines are kept as written so
+# it recognises the block and leaves the file alone. $HOME stands in for the path it writes.
+# The following lines were added by Docker Desktop to add commands to your PATH.
+export PATH="$PATH:$HOME/.docker/bin"
+# End of Docker Desktop section.
+
 # Homebrew (Apple Silicon)
 if [ -d "/opt/homebrew/bin" ]; then
     export PATH="/opt/homebrew/bin:$PATH"

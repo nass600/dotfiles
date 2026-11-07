@@ -136,3 +136,13 @@ ZSH_HIGHLIGHT_STYLES[double-quoted-argument]='fg=46'
 # --- Per-vault shell config ---
 # Rendered by chezmoi from the zshrc field of each vault's dotfiles note. Never in this repo.
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
+
+# --- Docker CLI completions ---
+# Docker Desktop writes this block when it finds it missing; its marker lines are kept as written so
+# it recognises the block and leaves the file alone. The guard skips a second compinit when the
+# docker completion is already loaded.
+# The following lines have been added by Docker Desktop to enable Docker CLI completions.
+fpath=($HOME/.docker/completions $fpath)
+autoload -Uz compinit
+(( ${+_comps[docker]} )) || compinit
+# End of Docker CLI completions
