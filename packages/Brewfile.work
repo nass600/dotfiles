@@ -3,6 +3,7 @@
 tap "atlassian/acli"
 
 brew "acli"
+brew "ffmpeg-full"                # keg-only, beside ffmpeg: libass for burned-in captions in demo videos
 brew "k9s"
 
 cask "pritunl"
