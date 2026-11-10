@@ -1,8 +1,8 @@
 #!/bin/bash
 # Runtimes and global tools, declared in .chezmoidata/runtimes.toml. mise owns node, python and the
 # npm and PyPI tools through ~/.config/mise/config.toml (rendered from the same file); uv installs
-# the private PyPI tools over the 1Password ssh agent, because mise cannot list a private repo's
-# versions. Runs on every `chezmoi apply`: `mise ls --missing` and `uv tool list` say what is
+# the private PyPI tools over https through the gh credential helper, because mise cannot list a
+# private repo's versions. Runs on every `chezmoi apply`: `mise ls --missing` and `uv tool list` say what is
 # missing (a few seconds), and only that is installed, one line per item.
 {{- $m := index .runtimes .apps }}
 {{- $git := concat .runtimes.python_tools_git $m.python_tools_git }}
@@ -46,7 +46,7 @@ fi
 if ! command -v uv >/dev/null 2>&1; then
     pending "uv {{ .name }}" "$FORMULA_HINT" "missing_tool uv"
 elif ! uv tool list 2>/dev/null | grep -q '^{{ .name }} '; then
-    pending "uv {{ .name }} (private repo)" "needs the 1Password ssh agent unlocked: uv tool install {{ .url }}" "uv_install {{ .url }}"
+    pending "uv {{ .name }} (private repo)" "needs gh signed in (gh auth login --git-protocol https --web -s workflow): uv tool install {{ .url }}" "uv_install {{ .url }}"
 fi
 {{- end }}
 

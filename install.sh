@@ -90,10 +90,8 @@ ssh_agent_why() {
     [ -S "$OP_SSH_SOCK" ] || { echo "the agent socket does not exist yet (Use the SSH agent is off)"; return; }
     SSH_AUTH_SOCK="$OP_SSH_SOCK" ssh-add -l 2>&1 | tail -1
 }
-github_ssh_ok() {
-    SSH_AUTH_SOCK="$OP_SSH_SOCK" ssh -o BatchMode=yes -o ConnectTimeout=8 -o StrictHostKeyChecking=accept-new \
-        -T git@github.com 2>&1 | grep -q "successfully authenticated"
-}
+gh_ok()          { gh auth status >/dev/null 2>&1; }
+gh_workflow_ok() { gh auth status 2>/dev/null | grep -q "'workflow'"; }
 
 # Repeat a check until it passes, retrying on its own every 5 seconds and printing the reason
 # whenever it changes. $1 = check, $2 = what to do about it, $3 = reason function,
@@ -150,8 +148,8 @@ run_check() {
     row "1Password CLI can read secrets"     "$(is op_token_ok)"                      "Settings > Developer > Integrate with 1Password CLI; item $OP_NPM_ITEM"
     row "dotfiles item in 1Password"         "$(is op_dotfiles_ok)"                   "Private vault secure note \"dotfiles\" (profile, email, apps, claude_backup, prompt_color, ssh_config, zshrc)"
     row "1Password SSH agent has keys"       "$(is ssh_agent_ok)"                     "1Password > Settings > Developer > Use the SSH agent"
-    row "GitHub reachable over SSH"          "$(is github_ssh_ok)"                    "needed for the private doubtfire and parker installs"
-    row "GitHub CLI signed in"               "$(is gh auth status)"                   "optional, for releases and PRs: gh auth login --git-protocol ssh --skip-ssh-key --web -s workflow"
+    row "GitHub CLI signed in"               "$(is gh_ok)"                            "git and the private tools go through it: gh auth login --git-protocol https --web -s workflow"
+    row "GitHub CLI has the workflow scope"  "$(is gh_workflow_ok)"                   "lets git push CI changes: gh auth refresh -h github.com -s workflow"
     if command -v chezmoi >/dev/null 2>&1 && [ -f "$HOME/.config/chezmoi/chezmoi.toml" ]; then
         pending="$(chezmoi status --exclude=scripts 2>/dev/null | wc -l | tr -d ' ')"
         row "Home directory matches the repo"  "$([ "$pending" = 0 ] && echo ok || echo fail)" "$pending pending change(s): run chezmoi diff"
@@ -259,8 +257,26 @@ else
   (see README, Machines and vaults). A work vault has one too; pick it at the prompt that follows." op_dotfiles_why
 
     wait_until ssh_agent_ok "Waiting for the 1Password SSH agent.
-  Needs: 'Use the SSH agent' enabled. Without it the private tools (doubtfire, parker) cannot be installed." ssh_agent_why optional \
-        || echo "Continuing without the SSH agent. Run \`chezmoi apply\` again once it is enabled."
+  Needs: 'Use the SSH agent' enabled. Without it the ssh hosts from the dotfiles note cannot be reached." ssh_agent_why optional \
+        || echo "Continuing without the SSH agent. Enable it whenever you need those hosts; the apply does not."
+fi
+
+# --- GitHub CLI ---
+# Git reaches GitHub over https with gh as the credential helper (the managed gitconfig), so the apply
+# needs gh signed in: the private tools (doubtfire, parker) are cloned through it. The workflow scope
+# lets git push CI changes. The token lands in the Keychain, 1Password is not involved. If gh offers
+# to configure git, say yes: the managed gitconfig takes over at the apply.
+banner "3/6  GitHub CLI"
+if gh_ok && gh_workflow_ok; then
+    printf '  %sok%s    Already signed in. Nothing to do here.\n' "$C_GREEN" "$C_OFF"
+elif gh_ok; then
+    needs_you "gh is signed in without the workflow scope. Approve the refresh in the browser that opens."
+    gh auth refresh --hostname github.com --scopes workflow < /dev/tty \
+        || echo "Not refreshed. Later: gh auth refresh -h github.com -s workflow"
+else
+    needs_you "Sign in to GitHub in the browser that opens; approve the organisation access if asked."
+    gh auth login --hostname github.com --git-protocol https --web --scopes workflow < /dev/tty \
+        || echo "Not signed in. The private tools will be listed as pending; later: gh auth login --git-protocol https --web -s workflow"
 fi
 
 # --- Apply ---
@@ -268,9 +284,7 @@ fi
 # Homebrew formulae, casks, runtimes, Cursor extensions, App Store apps, summary. Steps never
 # stop the apply; the summary step lists what failed. chezmoi itself only exits non-zero on Ctrl-C or
 # when a file cannot be written (a 1Password item missing, for instance).
-banner "3/6  Which vault, then 4/6 dotfiles and packages, 5/6 App Store"
-# Clone over https: the 1Password ssh agent may not be ready yet, and the managed gitconfig
-# rewrites GitHub https remotes to ssh once it is applied.
+banner "4/6  Which vault, then 5/6 dotfiles and packages, 6/6 App Store"
 if [ ! -d "$SRC/.git" ]; then
     mkdir -p "$(dirname "$SRC")"
     git clone --quiet ${DOTFILES_BRANCH:+--branch "$DOTFILES_BRANCH"} "https://github.com/$REPO.git" "$SRC"
@@ -280,20 +294,6 @@ fi
 APPLY_RC=0
 chezmoi init --apply --source "$SRC" || APPLY_RC=$?
 
-# --- GitHub CLI (optional) ---
-# Git never needs this: every GitHub remote goes over ssh through the 1Password agent. The `gh`
-# command does, for releases, pull requests and CI. The workflow scope lets it push CI changes.
-if [ "$APPLY_RC" != 130 ] && ! gh auth status >/dev/null 2>&1; then
-    banner "6/6  GitHub CLI sign-in (optional)"
-    needs_you "Only the gh command needs this (releases, pull requests, CI status). Git already works over ssh."
-    printf "Sign in now through the browser? [y/N] "
-    read -r REPLY < /dev/tty || REPLY=""
-    case "$REPLY" in
-        [Yy]*) gh auth login --hostname github.com --git-protocol ssh --skip-ssh-key --web --scopes workflow < /dev/tty \
-                   || echo "Not signed in. Later: gh auth login --git-protocol ssh --skip-ssh-key --web -s workflow" ;;
-        *)     echo "Skipped. Whenever you first need gh: gh auth login --git-protocol ssh --skip-ssh-key --web -s workflow" ;;
-    esac
-fi
 
 # --- Summary ---
 banner "Summary"
@@ -310,7 +310,7 @@ if [ -f "$LOG_DIR/manual.txt" ]; then
     printf '%s●%s %sLeft to do by hand%s\n' "$C_YELLOW" "$C_OFF" "$C_BOLD" "$C_OFF"
     [ "$APPLY_RC" = 0 ] || echo "  - run chezmoi apply first; this list is from the last apply that reached the end"
     if ! gh auth status >/dev/null 2>&1; then
-        echo "  - gh not signed in: gh auth login --git-protocol ssh --skip-ssh-key --web -s workflow (releases, pull requests)"
+        echo "  - gh not signed in: gh auth login --git-protocol https --web -s workflow (git pushes, private tools, releases), then chezmoi apply"
     fi
     sed 's/^/  - /' "$LOG_DIR/manual.txt"
 fi

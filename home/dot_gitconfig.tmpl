@@ -37,8 +37,15 @@
     lg3-specific = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset) %C(bold cyan)(committed: %cD)%C(reset) %C(auto)%d%C(reset)%n''          %C(white)%s%C(reset)%n'
 [remote "origin"]
     fetch = +refs/pull/*/head:refs/remotes/origin/pr/*
-# GitHub is reached over ssh only, through the 1Password ssh agent (~/.ssh/config). An https remote
-# pasted from the browser is rewritten to ssh, so git never needs a token or the GitHub CLI; `gh`
-# is signed in separately for releases and pull requests.
-[url "git@github.com:"]
-    insteadOf = https://github.com/
+# GitHub is reached over https with the GitHub CLI as credential helper: the token `gh auth login`
+# stored in the Keychain answers on its own, so editors, unattended jobs and `chezmoi apply` never
+# wait on the 1Password ssh agent, which keeps serving the hosts in ~/.ssh/config. The empty helper
+# line drops the osxkeychain helper that ships with git; the absolute path works from apps that do
+# not load the shell PATH. An ssh remote cloned or pasted earlier is rewritten to https, so existing
+# clones need no change.
+[credential "https://github.com"]
+    helper =
+    helper = !/opt/homebrew/bin/gh auth git-credential
+[url "https://github.com/"]
+    insteadOf = git@github.com:
+    insteadOf = ssh://git@github.com/

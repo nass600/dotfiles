@@ -29,10 +29,10 @@ The run takes 30 to 60 minutes, most of it downloading, and prints what it is do
 
 1. **Administrator access**: password, once
 2. **1Password**: sign in, then enable **Integrate with 1Password CLI** and **Use the SSH agent** under *Settings → Developer*. The script re-checks every 5 seconds and moves on by itself; on a re-run where this already works, nothing is asked
-3. **Which 1Password vault**: picked from the vaults 1Password lists by typing its first letters, in lowercase. Its `dotfiles` note says who this Mac is: git email, app bundle, prompt colour, backups. Touch ID once right after, while the note is read
-4. **Dotfiles and packages**: one line per item, `[12/30] ffmpeg … ok 41s`, in this order: macOS defaults, command-line tools, apps, runtimes (mise), Cursor extensions
-5. **App Store apps**: installed only if the App Store is signed in, otherwise listed as pending. Never blocks the rest. `mas` asks for your password when run outside the installer
-6. **GitHub CLI**, optional: sign in through the browser. Only the `gh` command needs it (releases, pull requests, CI). Git itself reaches GitHub over ssh through the 1Password agent, and https remotes are rewritten to ssh
+3. **GitHub CLI**: sign in through the browser, once. Git reaches GitHub over https with `gh` as credential helper (the token lives in the Keychain, so nothing ever prompts), the private tools are installed through it, and ssh remotes are rewritten to https
+4. **Which 1Password vault**: picked from the vaults 1Password lists by typing its first letters, in lowercase. Its `dotfiles` note says who this Mac is: git email, app bundle, prompt colour, backups. Touch ID once right after, while the note is read
+5. **Dotfiles and packages**: one line per item, `[12/30] ffmpeg … ok 41s`, in this order: macOS defaults, command-line tools, apps, runtimes (mise), Cursor extensions
+6. **App Store apps**: installed only if the App Store is signed in, otherwise listed as pending. Never blocks the rest. `mas` asks for your password when run outside the installer
 
 > [!TIP]
 > **Nothing stops the run.** Every step checks what is missing, installs only that, and carries on past failures; the last step prints one list of everything that could not be done, each with its reason and the fix. `chezmoi apply` retries exactly those. Ctrl-C is safe for the same reason. Every step also writes its full output to `~/Library/Logs/dotfiles/<step>.log`.
@@ -59,7 +59,7 @@ The run ends with this list, rendered from `home/.chezmoidata/manual.toml` plus 
 
 - [ ] Open a new terminal, then log out and back in once: scroll direction, Finder and Dock settings only apply at login
 - [ ] App Store apps still pending: sign in to the App Store, then `chezmoi apply`
-- [ ] `gh auth login --git-protocol ssh --skip-ssh-key --web -s workflow` the first time you need `gh`, if you skipped it
+- [ ] `gh auth login --git-protocol https --web -s workflow` if you skipped it, then `chezmoi apply`: git pushes and the private tools need it
 - [ ] Grant permissions as apps ask: Raycast, BetterSnapTool, iStat Menus, Logi Options+, Docker Desktop (*Accessibility*)
 - [ ] Create your desktops in Mission Control and turn on *Instant switching* in Rook's Settings › General
 - [ ] Restore what this public repo leaves out: AWS credentials (`~/.aws`) and, on the personal Mac, the JDownloader backup from iCloud Drive `Config/jDownloader/`. Claude Code memory restores itself from iCloud Drive `Config/Claude/` (see below)
@@ -87,7 +87,7 @@ brew bundle check --verbose --file=packages/Brewfile   # in a Brewfile but not i
 | 📦 Apps | `packages/Brewfile` (every Mac), `Brewfile.personal` or `Brewfile.work` (the bundle named by `apps` in the vault's `dotfiles` note) |
 | 🧰 Node, Python, npm and PyPI tools (via mise), Cursor extensions, apps built from source | `home/.chezmoidata/runtimes.toml` |
 | 🏠 ssh hosts, shell extras, git email, prompt colour | The `dotfiles` secure note in the vault (fields below). Pasted into `~/.ssh/config`, `~/.zshrc.local`, `~/.gitconfig`, `~/.p10k.zsh.local` |
-| 🔐 GitHub access | ssh only, via the 1Password agent; `~/.gitconfig` rewrites https GitHub remotes to ssh |
+| 🔐 GitHub access | https through the `gh` credential helper (token in the Keychain, no prompts); `~/.gitconfig` rewrites ssh GitHub remotes to https. The 1Password agent serves the other ssh hosts |
 | 💻 Which vault this Mac belongs to | `chezmoi init --prompt` |
 
 > [!IMPORTANT]
@@ -107,7 +107,7 @@ The repo is public and says nothing about where I work or what my networks look 
 | `ssh_config` | OpenSSH `Host` blocks, no `IdentityFile` | appended to `~/.ssh/config` |
 | `zshrc` | zsh exports and aliases | appended to `~/.zshrc.local` |
 
-SSH keys are **SSH Key** items in the same vault; `~/.config/1Password/ssh/agent.toml` names the chosen vault so the agent serves them, and always `Private` too, since that vault is me on every Mac (GitHub, home router, NAS) and its keys are never duplicated into an employer's vault. Every field exists in every note, empty allowed. A work Mac that should also reach home hosts gets them in the employer note's `ssh_config`. A new employer is a new vault with a `dotfiles` note and its keys, then `chezmoi init` picking that vault: no change to this repo.
+SSH keys are **SSH Key** items in the same vault; `~/.config/1Password/ssh/agent.toml` names the chosen vault so the agent serves them, and always `Private` too, since that vault is me on every Mac (home router, NAS) and its keys are never duplicated into an employer's vault. Every field exists in every note, empty allowed. A work Mac that should also reach home hosts gets them in the employer note's `ssh_config`. A new employer is a new vault with a `dotfiles` note and its keys, then `chezmoi init` picking that vault: no change to this repo.
 
 CI has no 1Password, so it renders both bundles from `DOTFILES_*` environment variables instead of a note. A repository secret, `FORBIDDEN_PATTERNS`, lists the words that must never appear here (one regex per line), and the build fails if any does.
 

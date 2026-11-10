@@ -17,8 +17,8 @@ These apply in every project. A repo's own `AGENTS.md` adds to them.
 
 ## This machine
 
-- **SSH keys come from the 1Password SSH agent.** An empty agent or `signing failed … communication with agent failed` means 1Password is locked or an approval prompt was missed: ask me to unlock and retry. Never suggest `ssh-add`. An HTTPS URL is an acceptable temporary workaround.
-- **The `gh` token has no `workflow` scope.** Push commits that touch `.github/workflows/*` over SSH.
+- **GitHub goes over https through the `gh` credential helper,** never ssh: the gitconfig rewrites ssh remotes to https. A git prompt for a username or a `Bad credentials` error means `gh` is signed out: ask me to run `gh auth login --git-protocol https --web -s workflow`. Never suggest ssh keys, `insteadOf` changes or tokens in URLs for GitHub.
+- **Other SSH hosts use the 1Password SSH agent.** An empty agent or `communication with agent failed` means 1Password is locked or an approval prompt was missed: ask me to unlock and retry. Never suggest `ssh-add`.
 - **`docs/superpowers/` is globally gitignored.** Never force-add ignored paths, and check each repo's own rules for whether specs and plans are committed at all.
 
 # graphify

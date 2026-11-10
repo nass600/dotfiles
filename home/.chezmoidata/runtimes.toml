@@ -10,11 +10,11 @@
     npm = ["vobsub-to-srt"]
     python_tools = ["poetry", "graphifyy"]
     # Private repos: mise cannot list a private repo's versions without a GitHub token, so uv
-    # installs these over the 1Password ssh agent. `name` is the installed tool, used to tell
-    # whether it is already there.
+    # installs these over https through the gh credential helper (gh signed in). `name` is the
+    # installed tool, used to tell whether it is already there.
     python_tools_git = [
-        { name = "doubtfire", url = "git+ssh://git@github.com/nass600/doubtfire" },
-        { name = "parker", url = "git+ssh://git@github.com/nass600/parker-cli" },
+        { name = "doubtfire", url = "git+https://github.com/nass600/doubtfire" },
+        { name = "parker", url = "git+https://github.com/nass600/parker-cli" },
     ]
 
 # Added on top of the shared lists by one app bundle only (apps in the vault's dotfiles note).
