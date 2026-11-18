@@ -13,6 +13,11 @@ These apply in every project. A repo's own `AGENTS.md` adds to them.
 
 - **Questions are not build orders.** Treat questions and musings ("I wonder if…", "should we…", "what do you think…") as discussion: answer and propose, then wait for an explicit go before changing anything. If unsure whether it is a request, ask.
 - **Execute implementation plans inline** in the main session. Do not use subagent-driven plan execution and do not ask which mode to use.
+- **Build what was designed, on the stack we use.** Before writing any UI, open its design (the Claude Design board,
+  mockup or spec screenshot) and build to it. Before choosing a framework or library, read what the sibling apps use and
+  use the same. Never depart from a design, a stated convention or the sibling stack on your own judgment, however small
+  the screen: say what you would change and why, and wait for my answer. A correction like "same stack as the others"
+  covers the whole project, so re-check everything already built against it, not only the parts I named.
 - **Project instructions live in `AGENTS.md`.** Do not create a `CLAUDE.md` in a repo; Claude Code reads `AGENTS.md` natively. Durable project rules go there, not into assistant memory, which is for personal and in-flight context only.
 
 ## This machine

@@ -65,6 +65,7 @@ cask "notion"
 cask "plex"
 cask "postman"
 cask "raycast"
+cask "sentry-cli"                 # a cask since Homebrew moved it out of core; token in ~/.sentryclirc
 cask "sublime-text"
 cask "the-unarchiver"
 cask "tokeneater"

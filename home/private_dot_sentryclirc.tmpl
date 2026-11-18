@@ -1,0 +1,6 @@
+{{- if .secrets -}}
+# sentry-cli and anything else that talks to Sentry's API. The token is a personal one (read and
+# write on projects, issues and alerts; no admin), kept in 1Password.
+[auth]
+token={{ onepasswordRead "op://Private/Sentry Token/credential" | trim }}
+{{- end }}

@@ -147,6 +147,7 @@ dotfiles
     ├── dot_local/bin/claude-backup               Claude Code memory to iCloud Drive, and back
     ├── private_dot_ssh/                          ssh config (hosts from the vault's note) and router public key, both from 1Password
     ├── private_dot_npmrc.tmpl                    npm token from 1Password
+    ├── private_dot_sentryclirc.tmpl              Sentry token from 1Password, for sentry-cli
     ├── private_dot_claude/                       Claude Code global instructions, settings and skills
     └── private_Library/                          Cursor and MKVToolNix settings, the claude-backup launch agent (claude_backup = true)
 ```

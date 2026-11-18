@@ -1,6 +1,7 @@
 # Secrets come from 1Password, which CI does not have.
 {{ if not .secrets }}
 .npmrc
+.sentryclirc
 .ssh/asus_router.pub
 .zshrc.local
 {{ end }}
