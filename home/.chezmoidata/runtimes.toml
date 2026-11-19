@@ -6,8 +6,11 @@
     # file). "lts" follows the current Node LTS line; "3.14" the latest 3.14.x.
     node = "lts"
     python = "3.14"
+    # pnpm is mise's own tool (a standalone binary). As an npm package it does not run: mise skips
+    # install scripts, and pnpm's swaps a placeholder for the real binary.
+    pnpm = "latest"
     # Global tools from npm and PyPI, also through mise, each in its own environment.
-    npm = ["vobsub-to-srt", "pnpm"]
+    npm = ["vobsub-to-srt"]
     python_tools = ["poetry", "graphifyy"]
     # Private repos: mise cannot list a private repo's versions without a GitHub token, so uv
     # installs these over https through the gh credential helper (gh signed in). `name` is the

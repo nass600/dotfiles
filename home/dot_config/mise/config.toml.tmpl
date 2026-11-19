@@ -6,6 +6,7 @@
 [tools]
 node = {{ .runtimes.node | quote }}
 python = {{ .runtimes.python | quote }}
+pnpm = {{ .runtimes.pnpm | quote }}
 {{- range concat .runtimes.npm $m.npm }}
 # allow_low_downloads: mise refuses niche npm packages by default; being in runtimes.toml is the vetting.
 "npm:{{ . }}" = { version = "latest", allow_low_downloads = true }
