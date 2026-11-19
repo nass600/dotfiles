@@ -7,7 +7,7 @@
     node = "lts"
     python = "3.14"
     # Global tools from npm and PyPI, also through mise, each in its own environment.
-    npm = ["vobsub-to-srt"]
+    npm = ["vobsub-to-srt", "pnpm"]
     python_tools = ["poetry", "graphifyy"]
     # Private repos: mise cannot list a private repo's versions without a GitHub token, so uv
     # installs these over https through the gh credential helper (gh signed in). `name` is the
