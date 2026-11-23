@@ -41,10 +41,11 @@ brew "uv"
 brew "wget"
 brew "zinit"
 
-# Casks. Not here on purpose: aegisub, makemkv and rar, disabled by Homebrew on 2026-09-01 because
-# their apps fail Gatekeeper. Install them by hand if needed (see README, "Left to do by hand").
+# Casks. Not here on purpose: makemkv and rar, disabled by Homebrew on 2026-09-01 because their
+# apps fail Gatekeeper. Install them by hand if needed (see README, "Left to do by hand").
 cask "1password"
 cask "1password-cli"
+cask "aegisub"
 cask "beekeeper-studio"
 cask "betterdisplay"
 cask "claude-code"

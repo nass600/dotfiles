@@ -8,7 +8,7 @@
         "create your desktops in Mission Control",
         "sign in to AWS: aws configure with the keys from the 1Password item \"AWS IAM (nass600)\", region eu-west-3; answer no to configuring AI agents (dotfiles owns those configs)",
         "launch Docker Desktop once and accept its terms",
-        "apps Homebrew no longer ships because they are unsigned: Aegisub, MakeMKV, rar; download from their sites if needed",
+        "apps Homebrew no longer ships because they are unsigned: MakeMKV, rar; download from their sites if needed",
     ]
     personal = [
         "restore the JDownloader backup (Settings -> Backup) from iCloud Drive/Config/jDownloader",

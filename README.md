@@ -63,7 +63,7 @@ The run ends with this list, rendered from `home/.chezmoidata/manual.toml` plus 
 - [ ] Grant permissions as apps ask: Raycast, BetterSnapTool, iStat Menus, Logi Options+, Docker Desktop (*Accessibility*)
 - [ ] Create your desktops in Mission Control and turn on *Instant switching* in Rook's Settings › General
 - [ ] Restore what this public repo leaves out: AWS credentials (`~/.aws`) and, on the personal Mac, the JDownloader backup from iCloud Drive `Config/jDownloader/`. Claude Code memory restores itself from iCloud Drive `Config/Claude/` (see below)
-- [ ] Apps Homebrew no longer ships because they are unsigned: [Aegisub](https://github.com/TypesettingTools/Aegisub/releases), [MakeMKV](https://www.makemkv.com/download/), [rar](https://www.rarlab.com/download.htm). Download if needed and allow them once under *Privacy & Security*. Extracting rar archives works without them (`unar`, The Unarchiver)
+- [ ] Apps Homebrew no longer ships because they are unsigned: [MakeMKV](https://www.makemkv.com/download/), [rar](https://www.rarlab.com/download.htm). Download if needed and allow them once under *Privacy & Security*. Extracting rar archives works without them (`unar`, The Unarchiver)
 
 > [!NOTE]
 > Back those two up **before** wiping a Mac. JDownloader: *Settings → Backup → Create backup*. Claude Code memory (`~/.claude/projects`) is backed up daily to iCloud Drive `Config/Claude/` by `claude-backup`, run from a launch agent; run `claude-backup` once by hand right before the wipe, and the first `chezmoi apply` on the new Mac restores the newest archive for that hostname (four are kept per Mac).
