@@ -1,0 +1,30 @@
+#!/bin/sh
+# Claude Code settings: the settings this repo declares, merged over the file on the Mac.
+#
+# Claude Code writes to settings.json itself (/model, a plugin switched on), so the file cannot be
+# a plain managed one. chezmoi hands this script the current file on stdin and writes back what it
+# prints: every key declared in .chezmoitemplates/claude-settings.json wins, lists are replaced
+# whole (a rule removed here leaves the Mac too), and keys not declared here stay as they are.
+# A key deleted from the declared file is NOT removed from a Mac; delete it there by hand.
+#
+# jq is the one macOS ships (/usr/bin/jq). If it fails, chezmoi leaves the file untouched.
+set -eu
+
+declared=$(cat <<'JSON'
+{{ includeTemplate "claude-settings.json" . }}
+JSON
+)
+
+live=$(mktemp)
+trap 'rm -f "$live"' EXIT
+cat > "$live"
+[ -s "$live" ] || echo '{}' > "$live"
+
+merged=$(jq --argjson declared "$declared" '. * $declared' "$live")
+
+# Nothing to change: hand the file back byte for byte, so its formatting never counts as a change.
+if [ "$(jq -S . "$live")" = "$(printf '%s' "$merged" | jq -S .)" ]; then
+  cat "$live"
+else
+  printf '%s\n' "$merged"
+fi
