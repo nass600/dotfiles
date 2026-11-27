@@ -1,0 +1,7 @@
+{{- /* The aws_config field of this Mac's vault's "dotfiles" note, or nothing when the note has no such
+       field or it is empty. Read through the whole item, because reading one missing field is an error. */ -}}
+{{- $config := "" -}}
+{{- range (onepassword "dotfiles" .vault).fields -}}
+{{-   if eq (index . "label") "aws_config" }}{{ $config = index . "value" | default "" }}{{ end -}}
+{{- end -}}
+{{- $config | trim -}}

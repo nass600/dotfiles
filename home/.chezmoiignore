@@ -6,6 +6,12 @@
 .zshrc.local
 {{ end }}
 
+# ~/.aws/config, only where the vault's dotfiles note has an aws_config field with something in it.
+# Elsewhere the folder is left alone, with whatever was set up by hand.
+{{ if or (not .secrets) (not (includeTemplate "aws-config" .)) }}
+.aws
+{{ end }}
+
 # Claude Code memory backup to iCloud Drive, only where the vault's dotfiles note asks for it.
 {{ if not .claude_backup }}
 .local/bin/claude-backup

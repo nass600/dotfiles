@@ -1,0 +1,6 @@
+{{- /* The aws_config field of this Mac's vault's "dotfiles" note, pasted in as is, so the public repo
+       never contains an account, a sign-in address or a profile name. To add or change a profile, edit
+       that field and run `chezmoi apply`. Only profiles and SSO sessions belong there, never a key:
+       ~/.aws/credentials is not managed. Ignored where the field is empty (see .chezmoiignore). */ -}}
+# From the dotfiles note in the {{ .vault }} vault. Edit the note's aws_config field, not this file.
+{{ includeTemplate "aws-config" . }}

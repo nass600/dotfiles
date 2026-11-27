@@ -62,7 +62,8 @@ The run ends with this list, rendered from `home/.chezmoidata/manual.toml` plus 
 - [ ] `gh auth login --git-protocol https --web -s workflow` if you skipped it, then `chezmoi apply`: git pushes and the private tools need it
 - [ ] Grant permissions as apps ask: Raycast, BetterSnapTool, iStat Menus, Logi Options+, Docker Desktop (*Accessibility*)
 - [ ] Create your desktops in Mission Control and turn on *Instant switching* in Rook's Settings › General
-- [ ] Restore what this public repo leaves out: AWS credentials (`~/.aws`) and, on the personal Mac, the JDownloader backup from iCloud Drive `Config/jDownloader/`. Claude Code memory restores itself from iCloud Drive `Config/Claude/` (see below)
+- [ ] Sign in to AWS: `aws sso login --profile <name>` for each SSO profile in `~/.aws/config`, which the vault's note provides. An account that still uses access keys needs `aws configure` with the keys from its 1Password item; `~/.aws/credentials` is never managed
+- [ ] Restore what this public repo leaves out: on the personal Mac, the JDownloader backup from iCloud Drive `Config/jDownloader/`. Claude Code memory restores itself from iCloud Drive `Config/Claude/` (see below)
 - [ ] Apps Homebrew no longer ships because they are unsigned: [MakeMKV](https://www.makemkv.com/download/), [rar](https://www.rarlab.com/download.htm). Download if needed and allow them once under *Privacy & Security*. Extracting rar archives works without them (`unar`, The Unarchiver)
 
 > [!NOTE]
@@ -86,7 +87,7 @@ brew bundle check --verbose --file=packages/Brewfile   # in a Brewfile but not i
 |---|---|
 | 📦 Apps | `packages/Brewfile` (every Mac), `Brewfile.personal` or `Brewfile.work` (the bundle named by `apps` in the vault's `dotfiles` note) |
 | 🧰 Node, Python, npm and PyPI tools (via mise), Cursor extensions, apps built from source | `home/.chezmoidata/runtimes.toml` |
-| 🏠 ssh hosts, shell extras, git email, prompt colour | The `dotfiles` secure note in the vault (fields below). Pasted into `~/.ssh/config`, `~/.zshrc.local`, `~/.gitconfig`, `~/.p10k.zsh.local` |
+| 🏠 ssh hosts, AWS profiles, shell extras, git email, prompt colour | The `dotfiles` secure note in the vault (fields below). Pasted into `~/.ssh/config`, `~/.aws/config`, `~/.zshrc.local`, `~/.gitconfig`, `~/.p10k.zsh.local` |
 | 🔐 GitHub access | https through the `gh` credential helper (token in the Keychain, no prompts); `~/.gitconfig` rewrites ssh GitHub remotes to https. The 1Password agent serves the other ssh hosts |
 | 💻 Which vault this Mac belongs to | `chezmoi init --prompt` |
 
@@ -106,6 +107,7 @@ The repo is public and says nothing about where I work or what my networks look 
 | `prompt_color` | 256-colour index | `P10K_COLOR_PRIMARY`, the accent that tells the Macs apart |
 | `ssh_config` | OpenSSH `Host` blocks, no `IdentityFile` | appended to `~/.ssh/config` |
 | `zshrc` | zsh exports and aliases | appended to `~/.zshrc.local` |
+| `aws_config` | AWS CLI profiles and SSO sessions, never a key | the whole of `~/.aws/config`. Empty or absent: `~/.aws` is left alone |
 
 SSH keys are **SSH Key** items in the same vault; `~/.config/1Password/ssh/agent.toml` names the chosen vault so the agent serves them, and always `Private` too, since that vault is me on every Mac (home router, NAS) and its keys are never duplicated into an employer's vault. Every field exists in every note, empty allowed. A work Mac that should also reach home hosts gets them in the employer note's `ssh_config`. A new employer is a new vault with a `dotfiles` note and its keys, then `chezmoi init` picking that vault: no change to this repo.
 
@@ -146,6 +148,7 @@ dotfiles
     ├── dot_config/                               ghostty, micro, homebrew (curl timeout), mise (from runtimes.toml), 1Password ssh agent vault
     ├── dot_local/bin/claude-backup               Claude Code memory to iCloud Drive, and back
     ├── private_dot_ssh/                          ssh config (hosts from the vault's note) and router public key, both from 1Password
+    ├── private_dot_aws/                          AWS CLI profiles (from the vault's note; no keys, credentials are not managed)
     ├── private_dot_npmrc.tmpl                    npm token from 1Password
     ├── private_dot_sentryclirc.tmpl              Sentry token from 1Password, for sentry-cli
     ├── private_dot_claude/                       Claude Code global instructions, settings (merged into the Mac's file on every apply), hooks and skills
