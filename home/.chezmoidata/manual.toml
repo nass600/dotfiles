@@ -6,7 +6,7 @@
         "log out and back in once: scroll direction, Finder and Dock settings only apply at login",
         "grant permissions as apps ask: Raycast, BetterSnapTool, iStat Menus, Logi Options+, Docker Desktop",
         "create your desktops in Mission Control",
-        "sign in to AWS: aws sso login --profile <name> for each SSO profile in ~/.aws/config (it comes from the aws_config field of the vault's dotfiles note). An account that still uses access keys: aws configure with the keys from its 1Password item; answer no to configuring AI agents (dotfiles owns those configs)",
+        "sign in to AWS: aws sso login --profile <name> for each SSO profile in ~/.aws/config (it comes from the aws_config field of the dotfiles note in the vault). An account that still uses access keys: aws configure with the keys from its 1Password item; answer no to configuring AI agents (dotfiles owns those configs)",
         "launch Docker Desktop once and accept its terms",
         "apps Homebrew no longer ships because they are unsigned: MakeMKV, rar; download from their sites if needed",
     ]
