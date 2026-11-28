@@ -49,3 +49,12 @@
 [url "https://github.com/"]
     insteadOf = git@github.com:
     insteadOf = ssh://git@github.com/
+{{- $identity := "" }}
+{{- if .secrets }}{{ $identity = includeTemplate "git-identity" . }}{{ end }}
+{{- if $identity }}
+# A second identity for one folder: repos under it commit with another email (the vault's dotfiles
+# note says which folder and which address, see ~/.config/git/identity). It comes last so it wins
+# over [user] above.
+[includeIf "gitdir:{{ $identity | splitList " " | first }}"]
+    path = ~/.config/git/identity
+{{- end }}

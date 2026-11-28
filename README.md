@@ -87,7 +87,7 @@ brew bundle check --verbose --file=packages/Brewfile   # in a Brewfile but not i
 |---|---|
 | 📦 Apps | `packages/Brewfile` (every Mac), `Brewfile.personal` or `Brewfile.work` (the bundle named by `apps` in the vault's `dotfiles` note) |
 | 🧰 Node, Python, npm and PyPI tools (via mise), Cursor extensions, apps built from source | `home/.chezmoidata/runtimes.toml` |
-| 🏠 ssh hosts, AWS profiles, shell extras, git email, prompt colour | The `dotfiles` secure note in the vault (fields below). Pasted into `~/.ssh/config`, `~/.aws/config`, `~/.zshrc.local`, `~/.gitconfig`, `~/.p10k.zsh.local` |
+| 🏠 ssh hosts, AWS profiles, shell extras, git email, prompt colour | The `dotfiles` secure note in the vault (fields below). Pasted into `~/.ssh/config`, `~/.aws/config`, `~/.zshrc.local`, `~/.gitconfig` (and `~/.config/git/identity` for a folder with its own email), `~/.p10k.zsh.local` |
 | 🔐 GitHub access | https through the `gh` credential helper (token in the Keychain, no prompts); `~/.gitconfig` rewrites ssh GitHub remotes to https. The 1Password agent serves the other ssh hosts |
 | 💻 Which vault this Mac belongs to | `chezmoi init --prompt` |
 
@@ -108,6 +108,7 @@ The repo is public and says nothing about where I work or what my networks look 
 | `ssh_config` | OpenSSH `Host` blocks, no `IdentityFile` | appended to `~/.ssh/config` |
 | `zshrc` | zsh exports and aliases | appended to `~/.zshrc.local` |
 | `aws_config` | AWS CLI profiles and SSO sessions, never a key | the whole of `~/.aws/config`. Empty or absent: `~/.aws` is left alone |
+| `git_identity` | one line: a folder, a space, an email, e.g. `~/Workspace/acme/ me@acme.example` | repos under that folder commit with that email (`[includeIf]` in `~/.gitconfig` + `~/.config/git/identity`); everywhere else `email` applies. Empty or absent: one identity |
 
 SSH keys are **SSH Key** items in the same vault; `~/.config/1Password/ssh/agent.toml` names the chosen vault so the agent serves them, and always `Private` too, since that vault is me on every Mac (home router, NAS) and its keys are never duplicated into an employer's vault. Every field exists in every note, empty allowed. A work Mac that should also reach home hosts gets them in the employer note's `ssh_config`. A new employer is a new vault with a `dotfiles` note and its keys, then `chezmoi init` picking that vault: no change to this repo.
 
@@ -145,7 +146,7 @@ dotfiles
     │   └── run_after_99-summary.sh.tmpl          what could not be done, then what only you can do
     ├── dot_zshrc · dot_zprofile · dot_p10k.zsh*  shell and prompt (+ dot_zshrc.local.tmpl from the vault's note)
     ├── dot_gitconfig.tmpl · dot_gitignore        git
-    ├── dot_config/                               ghostty, micro, homebrew (curl timeout), mise (from runtimes.toml), 1Password ssh agent vault
+    ├── dot_config/                               ghostty, micro, homebrew (curl timeout), mise (from runtimes.toml), 1Password ssh agent vault, git's second identity (from the vault's note)
     ├── dot_local/bin/claude-backup               Claude Code memory to iCloud Drive, and back
     ├── private_dot_ssh/                          ssh config (hosts from the vault's note) and router public key, both from 1Password
     ├── private_dot_aws/                          AWS CLI profiles (from the vault's note; no keys, credentials are not managed)

@@ -1,0 +1,7 @@
+{{- /* The second git identity: the email commits carry in the one folder the vault's dotfiles note names
+       (its git_identity field, "<folder> <email>"). ~/.gitconfig includes this file for repos under that
+       folder only, so the public repo never contains the folder or the address. Ignored where the field
+       is empty (see .chezmoiignore). */ -}}
+# From the dotfiles note in the {{ .vault }} vault. Edit the note's git_identity field, not this file.
+[user]
+    email = {{ includeTemplate "git-identity" . | splitList " " | last }}

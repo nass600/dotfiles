@@ -12,6 +12,12 @@
 .aws
 {{ end }}
 
+# ~/.config/git/identity, only where the vault's dotfiles note has a git_identity field with something
+# in it. Elsewhere git keeps the one identity of ~/.gitconfig.
+{{ if or (not .secrets) (not (includeTemplate "git-identity" .)) }}
+.config/git/identity
+{{ end }}
+
 # Claude Code memory backup to iCloud Drive, only where the vault's dotfiles note asks for it.
 {{ if not .claude_backup }}
 .local/bin/claude-backup

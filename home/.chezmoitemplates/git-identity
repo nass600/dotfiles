@@ -1,0 +1,7 @@
+{{- /* The git_identity field of this Mac's vault's "dotfiles" note, or nothing when the note has no such
+       field or it is empty. Read through the whole item, because reading one missing field is an error. */ -}}
+{{- $identity := "" -}}
+{{- range (onepassword "dotfiles" .vault).fields -}}
+{{-   if eq (index . "label") "git_identity" }}{{ $identity = index . "value" | default "" }}{{ end -}}
+{{- end -}}
+{{- $identity | trim -}}
